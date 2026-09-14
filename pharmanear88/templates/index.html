@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PharmaNear — بوابتك الذكية للدواء</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="4" width="4" height="16" rx="1.5" fill="#ffffff"/>
+          <rect x="4" y="10" width="16" height="4" rx="1.5" fill="#ffffff"/>
+        </svg>
+      </div>
+      <div class="brand-name">Pharma<span>Near</span></div>
+    </div>
+    <div class="header-actions">
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button type="button" id="btn-ar" class="active" onclick="setLang('ar')">عربي</button>
+        <button type="button" id="btn-en" onclick="setLang('en')">EN</button>
+      </div>
+      <button type="button" class="btn-portal" onclick="goToApp('pharmacist')">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span data-ar-only>دخول الصيدلي</span><span data-en-only>Pharmacist Portal</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <svg class="pulse-line" viewBox="0 0 1200 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 60 L280 60 L310 20 L340 100 L370 40 L400 60 L1200 60" stroke="#10b981" stroke-width="2" fill="none"/>
+  </svg>
+  <div class="hero-inner">
+    <h1 data-ar-only>بوابتك الذكية للوصول إلى الدواء</h1>
+    <h1 data-en-only>Your smart gateway to medicine access</h1>
+    <p class="sub" data-ar-only>ابحث عن دوائك، اعثر على أقرب صيدلية متوفر فيها الدواء، أو تواصل مباشرة مع الصيدلي في ثوانٍ.</p>
+    <p class="sub" data-en-only>Search for your medicine, find the nearest pharmacy that has it in stock, or contact the pharmacist directly — in seconds.</p>
+
+    <div class="hero-ctas">
+      <button type="button" class="btn-hero gold" onclick="goToApp('customer')">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2.2"/>
+          <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+        <span data-ar-only>ابحث عن دواء الآن</span>
+        <span data-en-only>Search for medicine now</span>
+      </button>
+      <button type="button" class="btn-hero outline" onclick="goToApp('pharmacist')">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2.2"/>
+          <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+        <span data-ar-only>تسجيل دخول / إضافة صيدلية</span>
+        <span data-en-only>Pharmacist login / Add pharmacy</span>
+      </button>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat"><b>+120</b><span data-ar-only>صيدلية مسجلة</span><span data-en-only>registered pharmacies</span></div>
+      <div class="hero-stat"><b>+4,000</b><span data-ar-only>عملية بحث يومياً</span><span data-en-only>searches per day</span></div>
+      <div class="hero-stat"><b>&lt;10s</b><span data-ar-only>متوسط وقت الاتصال</span><span data-en-only>avg. time to contact</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="app-section" id="app">
+  <div class="shell">
+    <div class="section-head">
+      <span class="section-kicker" data-ar-only>التطبيق التفاعلي</span>
+      <span class="section-kicker" data-en-only>Interactive app</span>
+      <h2 data-ar-only>جرّب PharmaNear الآن</h2>
+      <h2 data-en-only>Try PharmaNear right now</h2>
+      <p data-ar-only>بدّل بين واجهة العميل وبوابة الصيدلي دون إعادة تحميل الصفحة.</p>
+      <p data-en-only>Switch between the customer view and the pharmacist portal — no page reloads.</p>
+    </div>
+
+    <div class="app-frame">
+      <div class="app-tabs" role="tablist">
+        <button class="app-tab active" id="tab-customer" role="tab" aria-selected="true" onclick="switchApp('customer')">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+            <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span data-ar-only>ابحث عن دواء</span><span data-en-only>Find medicine</span>
+        </button>
+        <button class="app-tab" id="tab-pharmacist" role="tab" aria-selected="false" onclick="switchApp('pharmacist')">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span data-ar-only>بوابة الصيدلي</span><span data-en-only>Pharmacist portal</span>
+        </button>
+      </div>
+
+      <div class="app-body">
+
+        <!-- ============ CUSTOMER PANEL ============ -->
+        <div class="app-panel" id="panel-customer">
+          <div class="search-shell">
+            <svg class="icon-search" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+              <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input id="search-input" class="search-input" type="text" autocomplete="off"
+              data-ar-placeholder="ابحث عن دواء، مثال: بنادول، أموكسيسيلين..."
+              data-en-placeholder="Search medicine, e.g. Panadol, Amoxicillin..."
+              oninput="renderPharmacies()">
+          </div>
+
+          <div class="locate-row">
+            <button type="button" class="locate-btn" id="locate-btn" onclick="captureLocation()">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 21s-7-6.1-7-11.5A7 7 0 0119 9.5C19 14.9 12 21 12 21z" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="9.5" r="2.3" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <span data-ar-only>استخدام موقعي الحالي</span><span data-en-only>Use my location</span>
+            </button>
+            <span class="locate-status" id="locate-status"></span>
+          </div>
+
+          <div class="filter-row" id="filter-row">
+            <button class="chip active" data-filter="all" onclick="setFilter('all', this)">
+              <span data-ar-only>كل الصيدليات</span><span data-en-only>All pharmacies</span>
+            </button>
+            <button class="chip" data-filter="open" onclick="setFilter('open', this)">
+              <span data-ar-only>مفتوحة الآن</span><span data-en-only>Open now</span>
+            </button>
+            <button class="chip" data-filter="instock" onclick="setFilter('instock', this)">
+              <span data-ar-only>متوفر فقط</span><span data-en-only>In stock only</span>
+            </button>
+            <button class="chip" data-filter="nearest" onclick="setFilter('nearest', this)">
+              <span data-ar-only>الأقرب أولاً</span><span data-en-only>Nearest first</span>
+            </button>
+          </div>
+
+          <div class="mini-label">
+            <h3 data-ar-only>صيدليات بالقرب منك</h3>
+            <h3 data-en-only>Pharmacies near you</h3>
+            <span class="count" id="result-count"></span>
+          </div>
+
+          <div class="card-list" id="card-list"></div>
+
+          <div class="empty-state" id="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            <h4 data-ar-only>لا توجد صيدليات مطابقة</h4>
+            <h4 data-en-only>No matching pharmacies</h4>
+            <p data-ar-only>جرّب اسم دواء آخر أو أزل عوامل التصفية.</p>
+            <p data-en-only>Try a different medicine name or clear your filters.</p>
+          </div>
+        </div>
+
+        <!-- ============ PHARMACIST PANEL ============ -->
+        <div class="app-panel" id="panel-pharmacist" hidden>
+
+          <!-- ---- STAGE 1: VERIFICATION GATE ---- -->
+          <div id="pharmacist-gate">
+
+            <div class="trust-banner">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 3l7 3v5c0 5-3.2 8.5-7 10-3.8-1.5-7-5-7-10V6l7-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                <path d="M9.5 12l1.8 1.8L15 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <p data-ar-only>جميع الطلبات تخضع للمراجعة والتحقق من التراخيص الطبية قبل منح صلاحية الوصول.</p>
+              <p data-en-only>All applications are subject to review and medical-license verification before access is granted.</p>
+            </div>
+
+            <div class="mini-label" style="margin-top:22px;">
+              <h3 data-ar-only>طلب انضمام صيدلية معتمدة</h3>
+              <h3 data-en-only>Verified pharmacy application</h3>
+            </div>
+
+            <form class="med-form-card" id="verify-form" onsubmit="submitVerification(event)">
+              <div class="form-grid">
+                <div class="field full">
+                  <label data-ar-only>اسم الصيدلية</label><label data-en-only>Pharmacy name</label>
+                  <input id="v-name" required placeholder="e.g. صيدلية النور">
+                </div>
+                <div class="field">
+                  <label data-ar-only>رقم الترخيص / التصريح</label><label data-en-only>License / permit number</label>
+                  <input id="v-license" required placeholder="e.g. SD-PHM-04821">
+                </div>
+                <div class="field">
+                  <label data-ar-only>المنطقة / المدينة</label><label data-en-only>District / city</label>
+                  <input id="v-city" required placeholder="e.g. الخرطوم">
+                </div>
+                <div class="field full">
+                  <label data-ar-only>رقم هاتف المدير المسؤول</label><label data-en-only>Manager phone number</label>
+                  <input id="v-phone" type="tel" required placeholder="+249 9XX XXX XXX">
+                </div>
+                <div class="field full">
+                  <label data-ar-only>صورة الترخيص (PDF / JPG)</label><label data-en-only>License document (PDF / JPG)</label>
+                  <label class="upload-field" for="v-doc">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                    <span id="upload-label" data-ar-only>اضغط لرفع صورة الترخيص</span>
+                    <span id="upload-label-en" data-en-only>Click to upload your license</span>
+                    <input id="v-doc" type="file" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocSelect(this)" hidden>
+                  </label>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                  <span data-ar-only>إرسال طلب الانضمام</span><span data-en-only>Submit application</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- ---- STAGE 2: PENDING REVIEW ---- -->
+          <div id="pharmacist-pending" hidden>
+            <div class="pending-card">
+              <div class="pending-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M12 7v5l3.2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <h3 data-ar-only>تم استلام طلبك بنجاح</h3>
+              <h3 data-en-only>Your application has been received</h3>
+              <p class="pending-ref" id="pending-ref"></p>
+              <span class="status-badge pending" data-ar-only>قيد المراجعة</span>
+              <span class="status-badge pending" data-en-only>Under review</span>
+
+              <div class="pending-summary" id="pending-summary"></div>
+
+              <p class="pending-note" data-ar-only>سيتم التواصل معك خلال 24–48 ساعة عمل بعد التحقق من الترخيص الطبي لدى الجهات المختصة.</p>
+              <p class="pending-note" data-en-only>We'll contact you within 24–48 business hours once your medical license has been verified with the relevant authorities.</p>
+
+              <div class="form-actions">
+                <button type="button" class="btn-primary" onclick="previewDashboard()">
+                  <span data-ar-only>معاينة لوحة التحكم (وضع تجريبي)</span><span data-en-only>Preview dashboard (demo mode)</span>
+                </button>
+                <button type="button" class="btn-ghost" onclick="editApplication()">
+                  <span data-ar-only>تعديل الطلب</span><span data-en-only>Edit application</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---- STAGE 3: DASHBOARD (DEMO PREVIEW) ---- -->
+          <div id="pharmacist-dashboard" hidden>
+
+            <div class="demo-banner">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 9v4M12 16.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+              <p data-ar-only>أنت في وضع المعاينة التجريبية — لن تُفعَّل هذه البيانات فعلياً حتى تتم الموافقة على طلبك.</p>
+              <p data-en-only>You're in demo preview mode — this data won't go live until your application is approved.</p>
+            </div>
+
+            <div class="mini-label" style="margin-top:18px;">
+              <h3 data-ar-only>بيانات الصيدلية</h3>
+              <h3 data-en-only>Pharmacy info</h3>
+            </div>
+            <div class="info-card">
+              <div class="info-card-top">
+                <div style="flex:1;">
+                  <input id="pharm-name" class="ghost-input" value="صيدلية النور" aria-label="Pharmacy name">
+                  <div class="status-caption is-open" id="open-status-caption" data-ar-only>مفتوحة الآن</div>
+                  <div class="status-caption is-open" id="open-status-caption-en" data-en-only>Open now</div>
+                </div>
+                <label class="toggle-switch" aria-label="Open or closed">
+                  <input type="checkbox" id="pharm-open-toggle" checked onchange="toggleOpenStatus()">
+                  <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </label>
+              </div>
+              <div class="info-fields">
+                <div class="field">
+                  <label data-ar-only>العنوان</label><label data-en-only>Address</label>
+                  <input id="pharm-address" type="text" value="شارع الرياض، الخرطوم">
+                </div>
+                <div class="field">
+                  <label data-ar-only>رقم التواصل</label><label data-en-only>Contact number</label>
+                  <input id="pharm-phone" type="tel" value="+249912345001">
+                </div>
+                <div class="field">
+                  <label data-ar-only>ساعات العمل</label><label data-en-only>Working hours</label>
+                  <input id="pharm-hours" type="text" value="8:00 ص – 11:00 م" placeholder="e.g. 8:00 AM – 11:00 PM">
+                </div>
+              </div>
+              <button class="btn-primary" onclick="savePharmacyInfo(event)">
+                <span data-ar-only>حفظ التغييرات</span><span data-en-only>Save changes</span>
+              </button>
+            </div>
+
+            <div class="mini-label">
+              <h3 id="form-heading-ar" data-ar-only>إضافة دواء</h3>
+              <h3 id="form-heading" data-en-only>Add medicine</h3>
+            </div>
+            <form class="med-form-card" id="med-form" onsubmit="handleMedSubmit(event)">
+              <div class="form-grid">
+                <div class="field full">
+                  <label data-ar-only>اسم الدواء</label><label data-en-only>Medicine name</label>
+                  <input id="f-name" required placeholder="e.g. Panadol Extra">
+                </div>
+                <div class="field">
+                  <label data-ar-only>الجرعة / الشكل</label><label data-en-only>Dosage / form</label>
+                  <input id="f-form" required placeholder="e.g. 500mg, 24 tablets">
+                </div>
+                <div class="field">
+                  <label data-ar-only>السعر (جنيه)</label><label data-en-only>Price (SDG)</label>
+                  <input id="f-price" type="number" min="0" step="1" required placeholder="e.g. 3500">
+                </div>
+                <div class="field full">
+                  <label data-ar-only>حالة التوفر</label><label data-en-only>Stock status</label>
+                  <select id="f-status">
+                    <option value="in" data-ar-only>متوفر</option><option value="in" data-en-only>In stock</option>
+                    <option value="low" data-ar-only>كمية محدودة</option><option value="low" data-en-only>Low stock</option>
+                    <option value="out" data-ar-only>غير متوفر</option><option value="out" data-en-only>Out of stock</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary" id="form-submit-btn">
+                  <span data-ar-only>إضافة الدواء</span><span data-en-only>Add medicine</span>
+                </button>
+                <button type="button" class="btn-ghost" id="form-cancel-btn" onclick="cancelEdit()" hidden>
+                  <span data-ar-only>إلغاء</span><span data-en-only>Cancel</span>
+                </button>
+              </div>
+            </form>
+
+            <div class="mini-label">
+              <h3 data-ar-only>مخزونك الحالي</h3>
+              <h3 data-en-only>Your inventory</h3>
+              <span class="count" id="inv-count"></span>
+            </div>
+            <div class="inv-list" id="inv-list"></div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features-section">
+  <div class="shell">
+    <div class="section-head">
+      <span class="section-kicker" data-ar-only>مميزات المنصة</span>
+      <span class="section-kicker" data-en-only>Platform features</span>
+      <h2 data-ar-only>كل ما تحتاجه للوصول إلى دوائك</h2>
+      <h2 data-en-only>Everything you need to reach your medicine</h2>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 21s-7-6.1-7-11.5A7 7 0 0119 9.5C19 14.9 12 21 12 21z" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <h3 data-ar-only>الخريطة التفاعلية والـ GPS</h3>
+        <h3 data-en-only>Interactive map &amp; GPS</h3>
+        <p data-ar-only>تحديد أقرب الصيدليات بدقة باستخدام موقعك الحالي، مع مسافة تقديرية لكل صيدلية.</p>
+        <p data-en-only>Pinpoint the nearest pharmacies accurately using your live location, with an estimated distance for each.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 12a8 8 0 0113.66-5.66M20 12a8 8 0 01-13.66 5.66" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M18 3v4h-4M6 21v-4h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3 data-ar-only>التحديث الفوري للمخزون</h3>
+        <h3 data-en-only>Real-time stock updates</h3>
+        <p data-ar-only>اعرف توفر الدواء لحظة بلحظة، مباشرة من لوحة تحكم الصيدلية.</p>
+        <p data-en-only>Know medicine availability instantly, updated directly from the pharmacy's dashboard.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3 data-ar-only>الطلب والتواصل المباشر</h3>
+        <h3 data-en-only>Direct contact &amp; ordering</h3>
+        <p data-ar-only>اتصال سريع بالصيدلية وفتح موقعها مباشرة على خرائط غوغل بضغطة واحدة.</p>
+        <p data-en-only>Call the pharmacy instantly or open its location on Google Maps with a single tap.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="shell footer-inner">
+    <div class="footer-brand">PharmaNear</div>
+
+    <div class="footer-trust">
+      <svg class="footer-trust-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 3l7 3v5c0 5-3.2 8.5-7 10-3.8-1.5-7-5-7-10V6l7-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M9.5 12l1.8 1.8L15 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span data-ar-only>المنصة الموثوقة للبحث الدوائي</span>
+      <span data-en-only>The trusted medicine search platform</span>
+    </div>
+
+    <nav class="footer-links">
+      <a href="#" data-ar-only>الشروط والأحكام</a><a href="#" data-en-only>Terms &amp; Conditions</a>
+      <span class="footer-sep">|</span>
+      <a href="#" data-ar-only>سياسة الخصوصية</a><a href="#" data-en-only>Privacy Policy</a>
+      <span class="footer-sep">|</span>
+      <a href="#" data-ar-only>الدعم الفني</a><a href="#" data-en-only>Technical Support</a>
+    </nav>
+
+    <p class="footer-copyright">
+      <span data-ar-only>© 2026 PharmaNear. جميع الحقوق محفوظة.</span>
+      <span data-en-only>© 2026 PharmaNear. All rights reserved.</span>
+    </p>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
