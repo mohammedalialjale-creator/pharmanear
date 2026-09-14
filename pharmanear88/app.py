@@ -5,10 +5,11 @@ Structure:
   app.py        — application factory, routes, API endpoints
   models.py     — SQLAlchemy models (Pharmacy, Medicine)
   extensions.py — shared `db` instance
-  utils.py      — Haversine distance calculation
   seed.py       — mock data + seeding logic
   templates/    — Jinja templates (index.html)
   static/       — CSS + JS served to the browser
+
+Distance calculation uses geopy's geodesic formula (see /api/pharmacies/nearest).
 
 Local run:
     pip install -r requirements.txt
@@ -24,10 +25,10 @@ change, since the models are plain SQLAlchemy.
 import os
 
 from flask import Flask, render_template, request, jsonify
+from geopy.distance import geodesic
 
 from extensions import db
 from models import Pharmacy, Medicine
-from utils import haversine_km
 from seed import seed_database
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -91,12 +92,18 @@ def register_api_routes(app):
           open_only        — "true" to only return currently-open pharmacies.
           in_stock_only    — "true" to only return pharmacies with at least one
                               in-stock medicine (relative to the `q` match, if any).
+
+        Distance is calculated with geopy's geodesic (ellipsoidal) formula,
+        which is more accurate over real-world distances than a flat Haversine
+        approximation, especially as distance grows.
         """
         lat = request.args.get("lat", type=float)
         lng = request.args.get("lng", type=float)
         query = (request.args.get("q") or "").strip().lower()
         open_only = request.args.get("open_only", "false").lower() == "true"
         in_stock_only = request.args.get("in_stock_only", "false").lower() == "true"
+
+        user_point = (lat, lng) if lat is not None and lng is not None else None
 
         pharmacies = Pharmacy.query.all()
         results = []
@@ -118,11 +125,15 @@ def register_api_routes(app):
             if in_stock_only and not any(m.availability == "in_stock" for m in medicines):
                 continue
 
-            distance_km = haversine_km(lat, lng, pharmacy.latitude, pharmacy.longitude)
+            distance_km = None
+            if user_point is not None:
+                pharmacy_point = (pharmacy.latitude, pharmacy.longitude)
+                distance_km = geodesic(user_point, pharmacy_point).km
+
             results.append(pharmacy.to_dict(distance_km=distance_km, medicines=medicines))
 
-        # Sort by distance (nearest first) whenever we have the user's location.
-        if lat is not None and lng is not None:
+        # Sort nearest-first whenever we have the user's location.
+        if user_point is not None:
             results.sort(key=lambda r: (r["distance_km"] is None, r["distance_km"]))
 
         return jsonify({"count": len(results), "results": results})

@@ -61,7 +61,10 @@ function captureLocation() {
     pos => {
       userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       status.textContent = currentLang === 'ar' ? 'تم تحديد موقعك ✓' : 'Location set ✓';
-      renderPharmacies();
+      // Skip the typing-debounce here — an explicit "use my location" click
+      // should refresh the results immediately, not after a delay.
+      clearTimeout(searchDebounceTimer);
+      fetchAndRender();
     },
     () => {
       btn.classList.remove('active');
