@@ -13,6 +13,7 @@ let myPharmacyId = null;
 let myPharmacy = null;
 let userCoords = null; // { lat, lng } once captured
 let searchDebounceTimer = null;
+let lastResults = []; // the most recently rendered pharmacy list, indexed for onclick handlers
 
 const statusLabel = {
   in_stock:     { en: 'In stock',     ar: 'متوفر' },
@@ -26,8 +27,13 @@ function escapeHtml(str) {
 }
 function medName(m, lang) { return m.name ? m.name[lang] : ''; }
 function medForm(m, lang) { return m.form ? m.form[lang] : ''; }
-function mapsUrl(ph) { return `https://www.google.com/maps/search/?api=1&query=${ph.latitude},${ph.longitude}`; }
+function directionsUrl(ph) { return `https://www.google.com/maps/dir/?api=1&destination=${ph.latitude},${ph.longitude}`; }
 function telUrl(phone) { return `tel:${phone}`; }
+function whatsappUrl(phone, text) {
+  // wa.me wants digits only (country code + number, no "+", spaces, or dashes).
+  const digits = String(phone).replace(/[^\d]/g, '');
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}
 
 async function apiGet(path) {
   const res = await fetch(path);
@@ -46,33 +52,38 @@ async function apiSend(path, method, body) {
 
 /* ============ GEOLOCATION (HTML5 API) ============ */
 function captureLocation() {
-  const btn = document.getElementById('locate-btn');
+  const btn = document.getElementById('detect-btn');
   const status = document.getElementById('locate-status');
 
   if (!navigator.geolocation) {
+    status.className = 'locate-status error';
     status.textContent = currentLang === 'ar' ? 'الموقع غير مدعوم في هذا المتصفح' : 'Geolocation not supported';
     return;
   }
 
-  btn.classList.add('active');
-  status.textContent = currentLang === 'ar' ? 'جارٍ تحديد موقعك...' : 'Locating you...';
+  btn.classList.add('loading');
+  status.className = 'locate-status';
+  status.textContent = currentLang === 'ar' ? 'جارٍ تحديد موقعك بدقة GPS...' : 'Detecting your location with GPS accuracy...';
 
   navigator.geolocation.getCurrentPosition(
     pos => {
       userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      btn.classList.remove('loading');
+      status.className = 'locate-status success';
       status.textContent = currentLang === 'ar' ? 'تم تحديد موقعك ✓' : 'Location set ✓';
-      // Skip the typing-debounce here — an explicit "use my location" click
+      // Skip the typing-debounce here — an explicit "detect my location" click
       // should refresh the results immediately, not after a delay.
       clearTimeout(searchDebounceTimer);
       fetchAndRender();
     },
     () => {
-      btn.classList.remove('active');
+      btn.classList.remove('loading');
+      status.className = 'locate-status error';
       status.textContent = currentLang === 'ar'
-        ? 'تعذّر الوصول للموقع — تحقق من الأذونات'
-        : "Couldn't access your location — check permissions";
+        ? 'تعذّر الوصول للموقع — تحقق من أذونات GPS في المتصفح'
+        : "Couldn't access your location — check your browser's GPS permissions";
     },
-    { enableHighAccuracy: true, timeout: 10000 }
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
   );
 }
 
@@ -222,6 +233,8 @@ async function fetchAndRender() {
 }
 
 function renderResults(results) {
+  lastResults = results;
+
   const list = document.getElementById('card-list');
   const emptyState = document.getElementById('empty-state');
   const countEl = document.getElementById('result-count');
@@ -232,7 +245,7 @@ function renderResults(results) {
   emptyState.classList.remove('show');
 
   const lang = currentLang;
-  list.innerHTML = results.map(ph => {
+  list.innerHTML = results.map((ph, index) => {
     const medRows = ph.medicines.map(m => `
       <div class="med-row">
         <div>
@@ -248,7 +261,63 @@ function renderResults(results) {
       ? `<span class="open-text">${lang === 'ar' ? 'مفتوحة' : 'Open now'}</span>`
       : `<span class="closed-text">${lang === 'ar' ? 'مغلقة' : 'Closed'}</span>`;
 
-    const distanceText = typeof ph.distance_km === 'number' ? `${ph.distance_km.toFixed(1)} km` : '—';
+    // Show meters under 1km for a more precise "just around the corner" feel,
+    // kilometers beyond that.
+    let distanceText = '—';
+    if (typeof ph.distance_km === 'number') {
+      distanceText = ph.distance_km < 1
+        ? `${Math.round(ph.distance_km * 1000)} m`
+        : `${ph.distance_km.toFixed(1)} km`;
+    }
+
+    const directionsBtn = `
+      <a class="action-btn map" href="${directionsUrl(ph)}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 21s-7-6.1-7-11.5A7 7 0 0119 9.5C19 14.9 12 21 12 21z" stroke="currentColor" stroke-width="2"/>
+          <circle cx="12" cy="9.5" r="2.3" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        ${lang === 'ar' ? 'الاتجاهات 🗺️' : 'Directions 🗺️'}
+      </a>`;
+
+    // Smart contact handling: only render Call/WhatsApp when a real phone
+    // number came back from Overpass (`phone` or `contact:phone` tag) — never
+    // a dead `tel:` or `wa.me` link with no number behind it. Otherwise fall
+    // back to a "Share Location" action so the pharmacy is still reachable.
+    const hasPhone = !!(ph.phone && String(ph.phone).trim());
+    let contactButtons;
+    let columnClass;
+
+    if (hasPhone) {
+      const waText = lang === 'ar'
+        ? `مرحباً، أريد الاستفسار عن توفر دواء في ${ph.name.ar || ph.name.en}.`
+        : `Hello, I'd like to ask about medicine availability at ${ph.name.en}.`;
+      contactButtons = `
+        <a class="action-btn call" href="${telUrl(ph.phone)}">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" fill="currentColor"/>
+          </svg>
+          ${lang === 'ar' ? 'اتصال 📞' : 'Call 📞'}
+        </a>
+        <a class="action-btn whatsapp" href="${whatsappUrl(ph.phone, waText)}" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" fill="currentColor"/>
+          </svg>
+          ${lang === 'ar' ? 'طلب واتساب 💬' : 'WhatsApp Order 💬'}
+        </a>`;
+      columnClass = 'cols-3';
+    } else {
+      contactButtons = `
+        <button type="button" class="action-btn share" onclick="shareLocation(${index})">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="18" cy="5" r="2.4" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="6" cy="12" r="2.4" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="18" cy="19" r="2.4" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M8.2 10.8l7.6-4.2M8.2 13.2l7.6 4.2" stroke="currentColor" stroke-width="1.8"/>
+          </svg>
+          ${lang === 'ar' ? 'مشاركة الموقع 📤' : 'Share Location 📤'}
+        </button>`;
+      columnClass = 'cols-2';
+    }
 
     return `
       <article class="pcard">
@@ -259,7 +328,7 @@ function renderResults(results) {
               <span class="pcard-name">${escapeHtml(ph.name[lang])}</span>
             </div>
             <div class="pcard-meta">
-              <span>${escapeHtml(ph.address[lang])}</span>
+              <span>${escapeHtml(ph.address[lang] || (lang === 'ar' ? 'بدون عنوان مسجل' : 'No address on record'))}</span>
               <span class="dot-sep"></span>
               ${openBadge}
             </div>
@@ -273,24 +342,38 @@ function renderResults(results) {
           </div>
         </div>
         <div class="med-list">${medRows}</div>
-        <div class="pcard-actions">
-          <a class="action-btn call" href="${telUrl(ph.phone)}">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" fill="currentColor"/>
-            </svg>
-            ${lang === 'ar' ? 'اتصال بالصيدلية' : 'Call pharmacy'}
-          </a>
-          <a class="action-btn map" href="${mapsUrl(ph)}" target="_blank" rel="noopener">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 21s-7-6.1-7-11.5A7 7 0 0119 9.5C19 14.9 12 21 12 21z" stroke="currentColor" stroke-width="2"/>
-              <circle cx="12" cy="9.5" r="2.3" stroke="currentColor" stroke-width="2"/>
-            </svg>
-            ${lang === 'ar' ? 'فتح الموقع' : 'Open location'}
-          </a>
+        <div class="pcard-actions ${columnClass}">
+          ${directionsBtn}
+          ${contactButtons}
         </div>
       </article>
     `;
   }).join('');
+}
+
+// Fallback contact path when no phone number exists on the OSM record.
+// Prefers the native share sheet (great on mobile); falls back to opening a
+// generic WhatsApp share screen with no pre-filled recipient.
+async function shareLocation(index) {
+  const ph = lastResults[index];
+  if (!ph) return;
+
+  const lang = currentLang;
+  const name = ph.name[lang] || ph.name.en;
+  const link = directionsUrl(ph);
+  const shareText = lang === 'ar'
+    ? `📍 ${name}\nموقع الصيدلية على الخريطة:\n${link}`
+    : `📍 ${name}\nPharmacy location on the map:\n${link}`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: name, text: shareText, url: link });
+      return;
+    } catch (err) {
+      // User dismissed the native share sheet — fall through to the WhatsApp fallback below.
+    }
+  }
+  window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank', 'noopener');
 }
 
 /* ============ PHARMACIST: INFO CARD ============ */

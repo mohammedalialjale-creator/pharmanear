@@ -103,9 +103,33 @@ def sync_osm_pharmacy(osm_data):
     list). From then on it's addressable by its local `id` — e.g. for a
     pharmacist to log in and attach medicines/stock to that exact real,
     map-verified pharmacy.
+
+    Phone numbers are normalized (stripped of stray whitespace) so the
+    frontend's "does this pharmacy have a phone number" check is reliable —
+    a value like " " would otherwise slip through as truthy and produce a
+    dead Call/WhatsApp button.
+
+    Records still marked source="osm" (i.e. no pharmacist has claimed and
+    edited them yet) get their name/address/phone/hours refreshed from the
+    latest Overpass data on every sync, so a phone number newly added on
+    OpenStreetMap shows up here without any manual action. Once a pharmacist
+    edits a pharmacy (source becomes "manual" — see update_pharmacy), their
+    changes are treated as authoritative and are no longer overwritten.
     """
+    phone = (osm_data.get("phone") or "").strip()
+    hours = (osm_data.get("opening_hours") or "").strip()
+    address = (osm_data.get("address") or "").strip()
+
     pharmacy = Pharmacy.query.filter_by(osm_id=osm_data["osm_id"]).first()
     if pharmacy:
+        if pharmacy.source == "osm":
+            pharmacy.name_en = osm_data["name"]
+            pharmacy.name_ar = osm_data["name"]
+            pharmacy.address_en = address
+            pharmacy.address_ar = address
+            pharmacy.phone = phone
+            pharmacy.hours = hours
+            db.session.commit()
         return pharmacy
 
     pharmacy = Pharmacy(
@@ -113,13 +137,13 @@ def sync_osm_pharmacy(osm_data):
         source="osm",
         name_en=osm_data["name"],
         name_ar=osm_data["name"],
-        address_en=osm_data["address"] or "",
-        address_ar=osm_data["address"] or "",
+        address_en=address,
+        address_ar=address,
         latitude=osm_data["latitude"],
         longitude=osm_data["longitude"],
         status="open",  # OSM doesn't reliably expose live open/closed state
-        phone=osm_data["phone"] or "",
-        hours=osm_data["opening_hours"] or "",
+        phone=phone,
+        hours=hours,
     )
     db.session.add(pharmacy)
     db.session.commit()
@@ -255,6 +279,9 @@ def register_api_routes(app):
                       "latitude", "longitude", "status", "phone", "hours"):
             if field in payload:
                 setattr(pharmacy, field, payload[field])
+        # Once a pharmacist edits a pharmacy, treat their data as authoritative —
+        # sync_osm_pharmacy() will stop overwriting it from future OSM refreshes.
+        pharmacy.source = "manual"
         db.session.commit()
         return jsonify(pharmacy.to_dict())
 
