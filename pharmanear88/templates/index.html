@@ -3,108 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PharmaNear - بوابة الصيدليات الذكية</title>
+    <title>PharmaNear - تحديد تلقائي</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, sans-serif; }
-        .hero-card { background: #1e293b; border-radius: 16px; padding: 2rem; border: 1px solid #334155; }
-        .btn-custom { background-color: #10b981; color: white; font-weight: bold; border-radius: 8px; padding: 12px 24px; }
-        .btn-custom:hover { background-color: #059669; color: white; }
-        .pharmacy-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; margin-bottom: 1rem; padding: 1.5rem; }
+        body { background-color: #0b132b; color: #fff; font-family: system-ui, sans-serif; }
+        .box { background: #1c2541; border-radius: 15px; padding: 20px; border: 1px solid #3a506b; }
+        .card-pharm { background: #1c2541; border: 1px solid #48cae4; border-radius: 12px; margin-bottom: 12px; padding: 15px; }
+        .btn-find { background: #00b4d8; color: #fff; font-weight: bold; width: 100%; border-radius: 10px; padding: 12px; }
     </style>
 </head>
-<body>
-    <div class="container py-5">
-        <div class="hero-card text-center mb-5">
-            <h1 class="fw-bold mb-3">بوابتك الذكية للوصول إلى الدواء</h1>
-            <p class="text-muted mb-4">حدد موقعك الجغرافي للبحث عن أقرب الصيدليات والتواصل معها مباشرة</p>
-            <button id="locateBtn" class="btn btn-custom btn-lg" onclick="getLocation()">
-                تحديد موقعي وإيجاد أقرب صيدلية 📍
-            </button>
-            <div id="status" class="mt-3 text-warning"></div>
+<body class="p-3">
+
+    <div class="container" style="max-width: 600px;">
+        <div class="box text-center mb-4">
+            <h3 class="text-info fw-bold">PharmaNear 💊</h3>
+            <p class="text-secondary small">التحديد التلقائي للموقع والأقرب لك</p>
+            
+            <button id="btnFind" class="btn btn-find mb-2" onclick="getLocationAndSearch()">تحديد موقعي والبحث تلقائياً 🔍</button>
+            <div id="log" class="text-warning small mt-2"></div>
         </div>
 
-        <div id="resultsContainer" class="row"></div>
+        <div id="results"></div>
     </div>
 
     <script>
-        function getLocation() {
-            const status = document.getElementById('status');
-            const locateBtn = document.getElementById('locateBtn');
+        function getLocationAndSearch() {
+            const log = document.getElementById('log');
+            const res = document.getElementById('results');
+            const btn = document.getElementById('btnFind');
 
             if (!navigator.geolocation) {
-                status.innerText = "الجي بي إس غير مدعوم في متصفحك";
+                log.innerText = "❌ الـ GPS غير مدعوم في متصفحك.";
                 return;
             }
 
-            status.innerText = "جاري تحديد موقعك الجغرافي...";
-            locateBtn.disabled = true;
+            log.innerText = "📡 جاري طلب الموقع بأعلى دقة ممكنة...";
+            btn.disabled = true;
+
+            // إعدادات إجبار المتصفح على استخدام أقوى دقة (GPS حقيقي)
+            const options = {
+                enableHighAccuracy: true, // أجبر الجهاز يستعمل الـ GPS الحقيقي مش الـ IP
+                timeout: 15000,           // أمهله 15 ثانية لجلب النقطة
+                maximumAge: 0             // لا تستخدم موقع قديما مخزن
+            };
 
             navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    status.innerText = "تم تحديد الموقع! جاري البحث عن الصيدليات...";
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    log.innerText = `تم تحديد موقعك بدقة! جاري جلب الصيدليات...`;
+                    
                     fetchPharmacies(lat, lon);
                 },
-                (error) => {
-                    status.innerText = "تعذر الحصول على الموقع. يرجى تفعيل الـ GPS والتأكد من إعطاء الإذن.";
-                    locateBtn.disabled = false;
+                (err) => {
+                    btn.disabled = false;
+                    if(err.code === err.TIMEOUT) {
+                        log.innerText = "⚠️ تأخر الـ GPS في الاستجابة. جرب مرة أخرى أو تأكد من إعطاء الصلاحية للمتصفح.";
+                    } else {
+                        log.innerText = "❌ تعذر التحديد التلقائي. يرجى تفعيل الموقع (Location) في الويندوز/المتصفح.";
+                    }
                 },
-                { enableHighAccuracy: true }
+                options
             );
         }
 
         function fetchPharmacies(lat, lon) {
+            const log = document.getElementById('log');
+            const res = document.getElementById('results');
+
             fetch(`/api/pharmacies/nearest?lat=${lat}&lon=${lon}`)
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById('locateBtn').disabled = false;
-                    document.getElementById('status').innerText = "";
-                    renderPharmacies(data.data);
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('btnFind').disabled = false;
+                    if (d.status === "success" && d.data.length > 0) {
+                        log.innerText = `تم العثور على ${d.count} صيدلية حول موقعك!`;
+                        res.innerHTML = "";
+                        d.data.forEach(p => {
+                            const mapLink = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}`;
+                            res.innerHTML += `
+                                <div class="card-pharm">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="m-0 text-white">${p.name}</h5>
+                                        <span class="badge bg-success">${p.distance} كم</span>
+                                    </div>
+                                    <p class="text-secondary small mt-1 mb-2">📍 ${p.address}</p>
+                                    <p class="text-info small mb-2">📞 ${p.phone}</p>
+                                    <a href="${mapLink}" target="_blank" class="btn btn-outline-info btn-sm w-100">الاتجاهات على جوجل ماب 🗺️</a>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        log.innerText = "⚠️ لم يتم العثور على صيدليات مسجلة في نطاق منطقتك حالياً.";
+                    }
                 })
                 .catch(err => {
-                    document.getElementById('status').innerText = "حدث خطأ أثناء جلب البيانات.";
-                    document.getElementById('locateBtn').disabled = false;
+                    document.getElementById('btnFind').disabled = false;
+                    log.innerText = "❌ خطأ: افتح الرابط http://127.0.0.1:5000 وليس الملف المباشر.";
                 });
-        }
-
-        function renderPharmacies(pharmacies) {
-            const container = document.getElementById('resultsContainer');
-            container.innerHTML = "";
-
-            if (!pharmacies || pharmacies.length === 0) {
-                container.innerHTML = `<div class="text-center text-muted">لم يتم العثور على صيدليات قريبة في نطاق 3 كم.</div>`;
-                return;
-            }
-
-            pharmacies.forEach(p => {
-                const mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}`;
-                
-                let phoneButtons = "";
-                if (p.phone) {
-                    phoneButtons = `
-                        <a href="tel:${p.phone}" class="btn btn-outline-success btn-sm me-2">اتصال 📞</a>
-                        <a href="https://wa.me/${p.phone.replace(/[^0-9]/g, '')}" target="_blank" class="btn btn-outline-light btn-sm me-2">واتساب 💬</a>
-                    `;
-                } else {
-                    phoneButtons = `<span class="badge bg-secondary me-2">الرقم غير مسجل</span>`;
-                }
-
-                const cardHTML = `
-                    <div class="col-md-6">
-                        <div class="pharmacy-card">
-                            <h4 class="fw-bold text-success">${p.name}</h4>
-                            <p class="text-muted small mb-3">الإحداثيات: ${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}</p>
-                            <div class="d-flex align-items-center flex-wrap gap-2">
-                                <a href="${mapUrl}" target="_blank" class="btn btn-primary btn-sm">الذهاب للصيدلية 🗺️</a>
-                                ${phoneButtons}
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.innerHTML += cardHTML;
-            });
         }
     </script>
 </body>
