@@ -3,113 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PharmaNear - أقرب صيدلية</title>
+    <title>PharmaNear - البحث الدقيق</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-        }
-        .container {
-            max-width: 500px;
-            margin: auto;
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        h1 { color: #2c3e50; font-size: 24px; }
-        p { color: #7f8c8d; }
-        .btn {
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            padding: 15px 25px;
-            font-size: 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 15px;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-        .btn:hover { background-color: #219150; }
-        #loading { display: none; margin-top: 15px; color: #e67e22; font-weight: bold; }
-        .pharmacy-card {
-            background: #eef9f1;
-            border-right: 5px solid #27ae60;
-            margin: 15px 0;
-            padding: 15px;
-            text-align: right;
-            border-radius: 5px;
-        }
-        .pharmacy-card h3 { margin: 0 0 5px 0; color: #2c3e50; }
-        .pharmacy-card p { margin: 3px 0; color: #34495e; font-size: 14px; }
-        .status { font-weight: bold; color: #2980b9; }
+        body { font-family: system-ui, sans-serif; background: #f4f7f6; padding: 15px; text-align: center; }
+        .card { max-width: 480px; margin: auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .btn { background: #27ae60; color: #fff; border: none; padding: 12px 18px; font-size: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 8px; }
+        .btn-alt { background: #2980b9; }
+        input[type="text"] { width: 90%; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 6px; text-align: center; font-size: 15px; }
+        .item { background: #f8f9fa; border-right: 4px solid #27ae60; margin: 10px 0; padding: 10px; text-align: right; border-radius: 4px; }
+        #msg { margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>🏥 تطبيق PharmaNear</h1>
-    <p>البحث الآلي عن أقرب الصيدليات المعتمدة عبر الـ GPS</p>
+<div class="card">
+    <h2>🏥 PharmaNear</h2>
     
-    <button class="btn" onclick="getLocations()">📍 تحديد موقعي والأقرب فوراً</button>
+    <!-- الخيار الأول: التحديد التلقائي بالـ GPS -->
+    <button class="btn" onclick="findByGPS()">📍 تحديد موقعي الحالي بالـ GPS</button>
     
-    <div id="loading">⏳ جاري التقاط الـ GPS وجلب أقرب الصيدليات...</div>
-    <div id="results"></div>
+    <div style="margin: 15px 0; color: #7f8c8d;">أو أدخل منطقتك/حيك بدقة:</div>
+
+    <!-- الخيار الثاني: البحث بالمنطقة يدويًا لتجاوز خطأ كمبيوتر -->
+    <input type="text" id="areaInput" placeholder="مثال: شرق النيل الفيحاء مربع 5">
+    <button class="btn btn-alt" onclick="findByArea()">🔍 بحث باسم الحي/الشارع</button>
+
+    <div id="msg"></div>
+    <div id="list"></div>
 </div>
 
 <script>
-function getLocations() {
-    const loading = document.getElementById('loading');
-    const resultsDiv = document.getElementById('results');
-    
-    loading.style.display = 'block';
-    resultsDiv.innerHTML = '';
+function findByGPS() {
+    const msg = document.getElementById('msg');
+    const list = document.getElementById('list');
+    msg.style.color = '#e67e22';
+    msg.innerText = '⏳ جاري التقاط إحداثيات الـ GPS...';
+    list.innerHTML = '';
 
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-
-                fetch(`/api/pharmacies/nearest?lat=${lat}&lon=${lon}`)
-                .then(response => response.json())
-                .then(data => {
-                    loading.style.display = 'none';
-                    if (data.status === 'success' && data.count > 0) {
-                        data.data.forEach(p => {
-                            resultsDiv.innerHTML += `
-                                <div class="pharmacy-card">
-                                    <h3>${p.name}</h3>
-                                    <p>📍 <b>العنوان:</b> ${p.address}</p>
-                                    <p>📏 <b>المسافة:</b> ${p.distance} كم</p>
-                                    <p>📞 <b>الهاتف:</b> ${p.phone}</p>
-                                    <p class="status">🕒 ${p.open_state}</p>
-                                </div>
-                            `;
-                        });
-                    } else {
-                        resultsDiv.innerHTML = '<p style="color:red;">لم يتم العثور على صيدليات قريبة حالياً.</p>';
-                    }
-                })
-                .catch(error => {
-                    loading.style.display = 'none';
-                    resultsDiv.innerHTML = '<p style="color:red;">حدث خطأ أثناء الاتصال بالسيرفر.</p>';
-                });
-            },
-            (error) => {
-                loading.style.display = 'none';
-                alert('عذراً، يجب سماح الوصول للـ GPS لتحديد موقعك.');
-            }
-        );
-    } else {
-        loading.style.display = 'none';
-        alert('ميزّة الـ GPS غير مدعومة في متصفحك.');
+    if (!navigator.geolocation) {
+        msg.style.color = 'red';
+        msg.innerText = 'الـ GPS غير مدعوم في هذا المتصفح';
+        return;
     }
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            fetch(`/api/pharmacies?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
+            .then(res => res.json())
+            .then(data => renderResults(data))
+            .catch(() => showError('خطأ في الاتصال بالسيرفر.'));
+        },
+        () => showError('تعذر تحديد الموقع. يفضل فتح الموقع من الهاتف المحمول مع تفعيل الـ GPS.'),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
+function findByArea() {
+    const area = document.getElementById('areaInput').value.trim();
+    if (!area) {
+        alert('الرجاء كتابة اسم الحي أو الشارع أولاً');
+        return;
+    }
+    const msg = document.getElementById('msg');
+    const list = document.getElementById('list');
+    msg.style.color = '#e67e22';
+    msg.innerText = `⏳ جاري البحث عن صيدليات في (${area})...`;
+    list.innerHTML = '';
+
+    fetch(`/api/pharmacies?query=${encodeURIComponent(area)}`)
+    .then(res => res.json())
+    .then(data => renderResults(data))
+    .catch(() => showError('خطأ في الاتصال بالسيرفر.'));
+}
+
+function renderResults(data) {
+    const msg = document.getElementById('msg');
+    const list = document.getElementById('list');
+    if (data.status === 'success' && data.data.length > 0) {
+        msg.innerText = '';
+        data.data.forEach(p => {
+            list.innerHTML += `
+                <div class="item">
+                    <h3>${p.name}</h3>
+                    <p>📍 العنوان: ${p.address}</p>
+                    <p>📏 المسافة: ${p.distance_text}</p>
+                    <p>📞 الهاتف: ${p.phone}</p>
+                    <p>🕒 الحالة: ${p.status}</p>
+                </div>
+            `;
+        });
+    } else {
+        msg.style.color = 'red';
+        msg.innerText = 'لم يتم العثور على صيدليات في هذا النطاق.';
+    }
+}
+
+function showError(text) {
+    const msg = document.getElementById('msg');
+    msg.style.color = 'red';
+    msg.innerText = text;
 }
 </script>
 

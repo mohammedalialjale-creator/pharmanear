@@ -4,15 +4,13 @@ import requests
 
 app = Flask(__name__)
 
-# مفتاح SerpApi الخاص بك
 SERPAPI_KEY = (
     "6e07751de2550a29983fcfe68d6a868dd52c574206aaeae13795a0b9eed8b7bb"
 )
 
 
-def calculate_distance(lat1, lon1, lat2, lon2):
-    """حساب المسافة بدقة بين نقطتين بالـ GPS"""
-    R = 6371
+def calculate_distance_meters(lat1, lon1, lat2, lon2):
+    R = 6371000
     dLat = math.radians(lat2 - lat1)
     dLon = math.radians(lon2 - lon1)
     a = math.sin(dLat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(
@@ -27,62 +25,75 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/api/pharmacies/nearest", methods=["GET"])
-def get_nearest():
+@app.route("/api/pharmacies", methods=["GET"])
+def get_pharmacies():
     try:
         user_lat = request.args.get("lat", type=float)
         user_lon = request.args.get("lon", type=float)
+        search_query = request.args.get("query", type=str)
 
-        if user_lat is None or user_lon is None:
+        url = "https://serpapi.com/search.json"
+
+        # إذا قام المستخدم بإدخال اسم حي يدويًا
+        if search_query:
+            params = {
+                "engine": "google_maps",
+                "q": f"صيدلية في {search_query}",
+                "hl": "ar",
+                "api_key": SERPAPI_KEY,
+            }
+        # إذا تم استخدام الـ GPS
+        elif user_lat is not None and user_lon is not None:
+            params = {
+                "engine": "google_maps",
+                "q": "صيدلية",
+                "ll": f"@{user_lat},{user_lon},18z",  # تركيز بقطر مباني مجاورة
+                "hl": "ar",
+                "api_key": SERPAPI_KEY,
+            }
+        else:
             return jsonify(
-                {"status": "error", "message": "لم يتم التقاط الـ GPS"}
+                {"status": "error", "message": "الرجاء توفير بيانات موقع صحيحة"}
             ), 400
 
-        # الاستعلام عن نتائج جوجل مابس الحية عبر SerpApi
-        url = "https://serpapi.com/search.json"
-        params = {
-            "engine": "google_maps",
-            "q": "صيدلية",
-            "ll": f"@{user_lat},{user_lon},14z",
-            "google_domain": "google.com",
-            "hl": "ar",
-            "api_key": SERPAPI_KEY,
-        }
-
-        response = requests.get(url, params=params, timeout=12)
-        data = response.json()
+        res = requests.get(url, params=params, timeout=15)
+        data = res.json()
 
         pharmacies = []
-
         if "local_results" in data:
             for item in data["local_results"]:
                 gps = item.get("gps_coordinates", {})
                 p_lat = gps.get("latitude")
                 p_lon = gps.get("longitude")
 
-                if p_lat and p_lon:
-                    dist = calculate_distance(
+                dist_text = "غير محددة بدقة"
+                dist_m = 999999
+
+                if user_lat and user_lon and p_lat and p_lon:
+                    dist_m = calculate_distance_meters(
                         user_lat, user_lon, float(p_lat), float(p_lon)
                     )
-
-                    pharmacies.append(
-                        {
-                            "id": item.get("place_id_search", ""),
-                            "name": item.get("title", "صيدلية"),
-                            "lat": float(p_lat),
-                            "lon": float(p_lon),
-                            "distance": round(dist, 2),
-                            "phone": item.get("phone", "غير متوفر"),
-                            "address": item.get("address", "عنوان محلي"),
-                            "rating": item.get("rating", "غير مقيم"),
-                            "open_state": item.get(
-                                "open_state", "معلومات العمل غير متوفرة"
-                            ),
-                        }
+                    dist_text = (
+                        f"{int(dist_m)} متر"
+                        if dist_m < 1000
+                        else f"{round(dist_m / 1000, 2)} كم"
                     )
 
-        # ترتيب الصيدليات تلقائياً حسب الأقرب لموقع الـ GPS
-        pharmacies.sort(key=lambda x: x["distance"])
+                pharmacies.append(
+                    {
+                        "name": item.get("title", "صيدلية"),
+                        "address": item.get("address", "عنوان قريب"),
+                        "distance_meters": dist_m,
+                        "distance_text": dist_text,
+                        "phone": item.get("phone", "غير متوفر"),
+                        "status": item.get(
+                            "open_state", "معلومات العمل غير متوفرة"
+                        ),
+                    }
+                )
+
+        if user_lat and user_lon:
+            pharmacies.sort(key=lambda x: x["distance_meters"])
 
         return jsonify(
             {"status": "success", "count": len(pharmacies), "data": pharmacies}
