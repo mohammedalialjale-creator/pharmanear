@@ -1,8 +1,11 @@
 import math
+import os
 from flask import Flask, jsonify, render_template, request
 import requests
 
-app = Flask(__name__)
+# تحديد مسار مجلد الـ templates بدقة عشان Vercel ما يتلخبطش
+template_dir = os.path.abspath("./templates")
+app = Flask(__name__, template_folder=template_dir)
 
 SERPAPI_KEY = (
     "6e07751de2550a29983fcfe68d6a868dd52c574206aaeae13795a0b9eed8b7bb"
@@ -34,7 +37,6 @@ def get_pharmacies():
 
         url = "https://serpapi.com/search.json"
 
-        # إذا قام المستخدم بإدخال اسم حي يدويًا
         if search_query:
             params = {
                 "engine": "google_maps",
@@ -42,12 +44,11 @@ def get_pharmacies():
                 "hl": "ar",
                 "api_key": SERPAPI_KEY,
             }
-        # إذا تم استخدام الـ GPS
         elif user_lat is not None and user_lon is not None:
             params = {
                 "engine": "google_maps",
                 "q": "صيدلية",
-                "ll": f"@{user_lat},{user_lon},18z",  # تركيز بقطر مباني مجاورة
+                "ll": f"@{user_lat},{user_lon},18z",
                 "hl": "ar",
                 "api_key": SERPAPI_KEY,
             }
