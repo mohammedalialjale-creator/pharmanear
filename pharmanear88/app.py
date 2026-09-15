@@ -1,11 +1,9 @@
 import math
 import os
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, request
 import requests
 
-# تحديد مسار مجلد الـ templates بدقة عشان Vercel ما يتلخبطش
-template_dir = os.path.abspath("./templates")
-app = Flask(__name__, template_folder=template_dir)
+app = Flask(__name__)
 
 SERPAPI_KEY = (
     "6e07751de2550a29983fcfe68d6a868dd52c574206aaeae13795a0b9eed8b7bb"
@@ -25,7 +23,14 @@ def calculate_distance_meters(lat1, lon1, lat2, lon2):
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    # كود آمن يقرأ الملف أينما كان لمنع الشاشة البيضاء تماماً
+    if os.path.exists("templates/index.html"):
+        with open("templates/index.html", "r", encoding="utf-8") as f:
+            return f.read()
+    elif os.path.exists("index.html"):
+        with open("index.html", "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h2>لم يتم العثور على ملف index.html - يرجى التأكد من اسم الملف</h2>"
 
 
 @app.route("/api/pharmacies", methods=["GET"])
