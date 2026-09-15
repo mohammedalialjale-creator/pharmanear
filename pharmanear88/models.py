@@ -18,6 +18,15 @@ class Pharmacy(db.Model):
     __tablename__ = "pharmacies"
 
     id = db.Column(db.Integer, primary_key=True)
+
+    # Links this local record back to the live OpenStreetMap element it was
+    # discovered from (e.g. "node/123456"). This is the bridge that lets a
+    # pharmacist claim a real, map-verified pharmacy and attach medicines to
+    # it later — OSM stays the source of truth for "does this pharmacy exist
+    # and where", while this local row owns the medicines/stock data.
+    osm_id = db.Column(db.String(64), index=True, nullable=True)
+    source = db.Column(db.String(20), nullable=False, default="manual")  # "manual" | "osm"
+
     name_en = db.Column(db.String(150), nullable=False)
     name_ar = db.Column(db.String(150), nullable=False)
     address_en = db.Column(db.String(255))
@@ -44,6 +53,8 @@ class Pharmacy(db.Model):
         med_list = self.medicines if medicines is None else medicines
         return {
             "id": self.id,
+            "osm_id": self.osm_id,
+            "source": self.source,
             "name": {"en": self.name_en, "ar": self.name_ar},
             "address": {"en": self.address_en, "ar": self.address_ar},
             "latitude": self.latitude,

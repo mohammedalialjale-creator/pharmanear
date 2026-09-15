@@ -183,16 +183,28 @@ function setFilter(filter, btn) {
 
 function renderPharmacies() {
   clearTimeout(searchDebounceTimer);
+
+  if (!userCoords) {
+    // The backend now looks up real pharmacies from OpenStreetMap around the
+    // user's GPS position, so a location is required before we can search.
+    document.getElementById('card-list').innerHTML =
+      `<div class="loading-text">${currentLang === 'ar' ? 'بانتظار تحديد موقعك لعرض الصيدليات القريبة...' : 'Waiting for your location to show nearby pharmacies...'}</div>`;
+    return;
+  }
+
   document.getElementById('card-list').innerHTML =
     `<div class="loading-text">${currentLang === 'ar' ? 'جارٍ التحميل...' : 'Loading...'}</div>`;
   searchDebounceTimer = setTimeout(fetchAndRender, 250);
 }
 
 async function fetchAndRender() {
+  if (!userCoords) { renderPharmacies(); return; }
+
   const query = document.getElementById('search-input').value.trim();
   const params = new URLSearchParams();
+  params.set('lat', userCoords.lat);
+  params.set('lng', userCoords.lng);
   if (query) params.set('q', query);
-  if (userCoords) { params.set('lat', userCoords.lat); params.set('lng', userCoords.lng); }
   if (currentFilter === 'open') params.set('open_only', 'true');
   if (currentFilter === 'instock') params.set('in_stock_only', 'true');
 
@@ -477,5 +489,6 @@ function renderPharmacistDashboard() {
 
 /* ============ INIT ============ */
 document.addEventListener('DOMContentLoaded', () => {
-  renderPharmacies();
+  renderPharmacies();   // shows the "waiting for your location" placeholder immediately
+  captureLocation();    // then request GPS permission automatically — no manual entry needed
 });

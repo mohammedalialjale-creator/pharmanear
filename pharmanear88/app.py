@@ -2,18 +2,25 @@
 PharmaNear — Flask backend.
 
 Structure:
-  app.py        — application factory, routes, API endpoints
-  models.py     — SQLAlchemy models (Pharmacy, Medicine)
-  extensions.py — shared `db` instance
-  seed.py       — mock data + seeding logic
-  templates/    — Jinja templates (index.html)
-  static/       — CSS + JS served to the browser
+  app.py         — application factory, routes, API endpoints
+  models.py      — SQLAlchemy models (Pharmacy, Medicine)
+  extensions.py  — shared `db` instance
+  osm_service.py — live pharmacy lookup via the Overpass API (OpenStreetMap)
+  seed.py        — mock data + seeding logic (used for local/manual pharmacies)
+  templates/     — Jinja templates (index.html)
+  static/        — CSS + JS served to the browser
 
-Distance calculation uses geopy's geodesic formula (see /api/pharmacies/nearest).
+/api/pharmacies/nearest now finds real, live pharmacies from OpenStreetMap
+within a radius of the user's GPS coordinates (via osm_service.py), computes
+exact distance with geopy's geodesic formula, and sorts nearest-first. Each
+OSM result is mirrored into the local `pharmacies` table (keyed by osm_id) —
+that local row is what a pharmacist attaches medicines/stock/hours to later,
+so OSM stays the source of truth for "does this pharmacy exist and where"
+while the local DB owns everything editable.
 
 Local run:
     pip install -r requirements.txt
-    flask --app app seed-db     # optional — also runs automatically on first boot
+    flask --app app seed-db     # optional — seeds a few manual demo pharmacies
     flask --app app run --debug
 
 Switching from SQLite to Supabase/Postgres later: just set the
@@ -26,9 +33,11 @@ import os
 
 from flask import Flask, render_template, request, jsonify
 from geopy.distance import geodesic
+from sqlalchemy import inspect, text
 
 from extensions import db
 from models import Pharmacy, Medicine
+from osm_service import fetch_nearby_pharmacies
 from seed import seed_database
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -54,6 +63,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        _ensure_schema_upgrades()  # add new columns to an older local DB, if needed
         seed_database()  # no-op if the database already has data
 
     register_page_routes(app)
@@ -61,6 +71,59 @@ def create_app():
     register_cli(app)
 
     return app
+
+
+def _ensure_schema_upgrades():
+    """Add columns introduced after a DB file already exists.
+
+    Flask-SQLAlchemy's create_all() only creates missing *tables*, not
+    missing *columns* on tables that already exist — so an older local
+    pharmanear.db (from before the osm_id/source columns were added) would
+    otherwise break. This is a lightweight stand-in for a real migration
+    tool (Flask-Migrate/Alembic), appropriate while the schema is still
+    this early-stage; swap to Alembic once the schema stabilizes.
+    """
+    inspector = inspect(db.engine)
+    if "pharmacies" not in inspector.get_table_names():
+        return  # fresh DB — create_all() already built it with every column
+
+    existing_columns = {col["name"] for col in inspector.get_columns("pharmacies")}
+    with db.engine.begin() as conn:
+        if "osm_id" not in existing_columns:
+            conn.execute(text("ALTER TABLE pharmacies ADD COLUMN osm_id VARCHAR(64)"))
+        if "source" not in existing_columns:
+            conn.execute(text("ALTER TABLE pharmacies ADD COLUMN source VARCHAR(20) DEFAULT 'manual'"))
+
+
+def sync_osm_pharmacy(osm_data):
+    """Find or create the local Pharmacy row for a live OSM pharmacy.
+
+    This is the bridge to the future medicines database: the first time a
+    given OSM pharmacy is seen, a local row is created for it (empty medicine
+    list). From then on it's addressable by its local `id` — e.g. for a
+    pharmacist to log in and attach medicines/stock to that exact real,
+    map-verified pharmacy.
+    """
+    pharmacy = Pharmacy.query.filter_by(osm_id=osm_data["osm_id"]).first()
+    if pharmacy:
+        return pharmacy
+
+    pharmacy = Pharmacy(
+        osm_id=osm_data["osm_id"],
+        source="osm",
+        name_en=osm_data["name"],
+        name_ar=osm_data["name"],
+        address_en=osm_data["address"] or "",
+        address_ar=osm_data["address"] or "",
+        latitude=osm_data["latitude"],
+        longitude=osm_data["longitude"],
+        status="open",  # OSM doesn't reliably expose live open/closed state
+        phone=osm_data["phone"] or "",
+        hours=osm_data["opening_hours"] or "",
+    )
+    db.session.add(pharmacy)
+    db.session.commit()
+    return pharmacy
 
 
 # ---------------------------------------------------------------------------
@@ -86,29 +149,54 @@ def register_api_routes(app):
     def nearest_pharmacies():
         """
         Query params:
-          lat, lng        — user's coordinates (from the browser Geolocation API).
-                             Optional — if omitted, results are unsorted by distance.
+          lat, lng        — REQUIRED. User's coordinates (from the browser
+                             Geolocation API). Used both to query OpenStreetMap
+                             for real nearby pharmacies and to compute distance.
+          radius_m         — search radius in meters (default 5000 = 5km).
           q                — medicine name search (matches English or Arabic name).
           open_only        — "true" to only return currently-open pharmacies.
           in_stock_only    — "true" to only return pharmacies with at least one
                               in-stock medicine (relative to the `q` match, if any).
 
-        Distance is calculated with geopy's geodesic (ellipsoidal) formula,
-        which is more accurate over real-world distances than a flat Haversine
-        approximation, especially as distance grows.
+        Flow:
+          1. Query the Overpass API (OpenStreetMap) for real amenity=pharmacy
+             elements within `radius_m` of (lat, lng).
+          2. Mirror each result into the local `pharmacies` table (keyed by
+             osm_id) — this is the hook for attaching medicines/stock later.
+          3. Compute exact distance with geopy's geodesic formula.
+          4. Sort nearest-first and return as JSON.
+
+        If Overpass is unreachable or rate-limited, falls back to whatever
+        pharmacies already exist locally (from earlier successful syncs, or
+        manually-added ones) within the same radius, so the endpoint degrades
+        gracefully instead of returning nothing.
         """
         lat = request.args.get("lat", type=float)
         lng = request.args.get("lng", type=float)
+        if lat is None or lng is None:
+            return jsonify({"error": "lat and lng query parameters are required"}), 400
+
+        radius_m = request.args.get("radius_m", default=5000, type=int)
         query = (request.args.get("q") or "").strip().lower()
         open_only = request.args.get("open_only", "false").lower() == "true"
         in_stock_only = request.args.get("in_stock_only", "false").lower() == "true"
 
-        user_point = (lat, lng) if lat is not None and lng is not None else None
+        user_point = (lat, lng)
+        osm_pharmacies = fetch_nearby_pharmacies(lat, lng, radius_m=radius_m)
 
-        pharmacies = Pharmacy.query.all()
+        if osm_pharmacies:
+            candidate_pharmacies = [sync_osm_pharmacy(p) for p in osm_pharmacies]
+        else:
+            # Overpass unreachable/rate-limited/no results — fall back to
+            # local pharmacies (previously synced, or manually added) within range.
+            radius_km = radius_m / 1000
+            candidate_pharmacies = [
+                p for p in Pharmacy.query.all()
+                if geodesic(user_point, (p.latitude, p.longitude)).km <= radius_km
+            ]
+
         results = []
-
-        for pharmacy in pharmacies:
+        for pharmacy in candidate_pharmacies:
             medicines = pharmacy.medicines
 
             if query:
@@ -117,7 +205,7 @@ def register_api_routes(app):
                     if query in m.name_en.lower() or query in (m.name_ar or "")
                 ]
                 if not medicines:
-                    continue  # this pharmacy has no matching medicine
+                    continue
 
             if open_only and pharmacy.status != "open":
                 continue
@@ -125,18 +213,16 @@ def register_api_routes(app):
             if in_stock_only and not any(m.availability == "in_stock" for m in medicines):
                 continue
 
-            distance_km = None
-            if user_point is not None:
-                pharmacy_point = (pharmacy.latitude, pharmacy.longitude)
-                distance_km = geodesic(user_point, pharmacy_point).km
-
+            distance_km = geodesic(user_point, (pharmacy.latitude, pharmacy.longitude)).km
             results.append(pharmacy.to_dict(distance_km=distance_km, medicines=medicines))
 
-        # Sort nearest-first whenever we have the user's location.
-        if user_point is not None:
-            results.sort(key=lambda r: (r["distance_km"] is None, r["distance_km"]))
+        results.sort(key=lambda r: (r["distance_km"] is None, r["distance_km"]))
 
-        return jsonify({"count": len(results), "results": results})
+        return jsonify({
+            "count": len(results),
+            "results": results,
+            "source": "openstreetmap" if osm_pharmacies else "local_fallback",
+        })
 
     @app.route("/api/pharmacies/<int:pharmacy_id>")
     def get_pharmacy(pharmacy_id):
