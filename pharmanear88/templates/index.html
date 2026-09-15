@@ -8,41 +8,40 @@
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0b1528; color: #ffffff; margin: 0; padding: 0; text-align: center; }
         
-        .hero { padding: 50px 20px; max-width: 800px; margin: auto; }
-        h1 { font-size: 2.5rem; font-weight: bold; margin-bottom: 10px; color: #ffffff; }
-        p.subtitle { color: #a0aec0; font-size: 1.1rem; margin-bottom: 30px; }
+        .hero { padding: 40px 20px; max-width: 800px; margin: auto; }
+        h1 { font-size: 2.2rem; font-weight: bold; margin-bottom: 10px; color: #ffffff; }
+        p.subtitle { color: #a0aec0; font-size: 1rem; margin-bottom: 25px; }
         
-        /* كرت التطبيق التفاعلي */
+        .stats { display: flex; justify-content: space-around; margin: 25px 0; border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 15px 0; }
+        .stat-item h3 { margin: 0; font-size: 1.5rem; color: #2ecc71; }
+        .stat-item p { margin: 4px 0 0; color: #a0aec0; font-size: 0.85rem; }
+
         .interactive-card {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
-            padding: 30px;
+            padding: 25px;
             backdrop-filter: blur(10px);
             margin-top: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .btn-group { display: flex; flex-direction: column; gap: 15px; max-width: 500px; margin: auto; }
+        .btn-group { display: flex; flex-direction: column; gap: 12px; max-width: 500px; margin: auto; }
         
         .btn-gps {
             background: #27ae60;
             color: white;
             border: none;
-            padding: 15px 20px;
+            padding: 14px 20px;
             border-radius: 10px;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: bold;
             cursor: pointer;
             transition: 0.3s;
         }
         .btn-gps:hover { background: #219150; }
 
-        .search-box {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
+        .search-box { display: flex; gap: 10px; margin-top: 8px; }
         .search-input {
             flex: 1;
             padding: 12px 15px;
@@ -50,7 +49,7 @@
             border: 1px solid #4a5568;
             background: #1a202c;
             color: #fff;
-            font-size: 1rem;
+            font-size: 0.95rem;
             text-align: right;
         }
         .btn-search {
@@ -63,21 +62,17 @@
             cursor: pointer;
         }
 
-        .stats { display: flex; justify-content: space-around; margin: 40px 0; border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 20px 0; }
-        .stat-item h3 { margin: 0; font-size: 1.5rem; color: #2ecc71; }
-        .stat-item p { margin: 5px 0 0; color: #a0aec0; font-size: 0.9rem; }
-
-        #msg { margin-top: 20px; font-weight: bold; font-size: 1.1rem; }
-        .results-container { margin-top: 25px; text-align: right; max-width: 600px; margin-left: auto; margin-right: auto; }
+        #msg { margin-top: 15px; font-weight: bold; font-size: 1rem; }
+        .results-container { margin-top: 20px; text-align: right; max-width: 600px; margin-left: auto; margin-right: auto; }
         .pharmacy-item {
             background: #1a2638;
             border-right: 4px solid #27ae60;
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
-        .pharmacy-item h3 { margin: 0 0 8px 0; color: #2ecc71; }
-        .pharmacy-item p { margin: 4px 0; color: #cbd5e0; font-size: 0.95rem; }
+        .pharmacy-item h3 { margin: 0 0 6px 0; color: #2ecc71; }
+        .pharmacy-item p { margin: 4px 0; color: #cbd5e0; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -101,15 +96,12 @@
         </div>
     </div>
 
-    <!-- الجزء التفاعلي المدمج -->
     <div class="interactive-card">
-        <h2 style="margin-top: 0; color: #3498db;">جرب PharmaNear الآن 🎯</h2>
+        <h2 style="margin-top: 0; color: #3498db; font-size: 1.3rem;">جرب PharmaNear الآن 🎯</h2>
         
         <div class="btn-group">
-            <!-- 1. زر الـ GPS المباشر -->
             <button class="btn-gps" onclick="findByGPS()">📍 تحديد موقعي الحالي والأقرب فوراً</button>
 
-            <!-- 2. البحث بالحي/الشارع -->
             <div class="search-box">
                 <input type="text" id="areaInput" class="search-input" placeholder="أو اكتب اسم حلتك/شارعك (مثل: شرق النيل الفيحاء)">
                 <button class="btn-search" onclick="findByArea()">بحث 🔍</button>
