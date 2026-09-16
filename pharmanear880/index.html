@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaNear - بوابتك الذكية للوصول إلى الدواء</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0b1528; color: #ffffff; margin: 0; padding: 0; text-align: center; }
+
+        .hero { padding: 50px 20px; max-width: 800px; margin: auto; }
+        h1 { font-size: 2.5rem; font-weight: bold; margin-bottom: 10px; color: #ffffff; }
+        p.subtitle { color: #a0aec0; font-size: 1.1rem; margin-bottom: 30px; }
+
+        .interactive-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .btn-group { display: flex; flex-direction: column; gap: 15px; max-width: 500px; margin: auto; }
+
+        .btn-gps {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-gps:hover { background: #219150; }
+        .btn-gps:disabled { opacity: 0.6; cursor: wait; }
+
+        .search-box { display: flex; gap: 10px; margin-top: 10px; }
+        .search-input {
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #4a5568;
+            background: #1a202c;
+            color: #fff;
+            font-size: 1rem;
+            text-align: right;
+        }
+        .btn-search {
+            background: #f1c40f;
+            color: #000;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .stats { display: flex; justify-content: space-around; margin: 40px 0; border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 20px 0; }
+        .stat-item h3 { margin: 0; font-size: 1.5rem; color: #2ecc71; }
+        .stat-item p { margin: 5px 0 0; color: #a0aec0; font-size: 0.9rem; }
+
+        #msg { margin-top: 20px; font-weight: bold; font-size: 1.1rem; }
+        .results-container { margin-top: 25px; text-align: right; max-width: 600px; margin-left: auto; margin-right: auto; }
+        .pharmacy-item {
+            background: #1a2638;
+            border-right: 4px solid #27ae60;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .pharmacy-item h3 { margin: 0 0 8px 0; color: #2ecc71; }
+        .pharmacy-item p { margin: 4px 0; color: #cbd5e0; font-size: 0.95rem; }
+
+        .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .act {
+            flex: 1 1 auto;
+            text-align: center;
+            text-decoration: none;
+            padding: 9px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+        .act-dir { background: #3498db; color: #fff; }
+        .act-call { background: #27ae60; color: #fff; }
+        .act-wa { background: #25D366; color: #06301a; }
+        .act-share { background: transparent; color: #f1c40f; border: 1px solid #f1c40f; }
+    </style>
+</head>
+<body>
+
+<div class="hero">
+    <h1>بوابتك الذكية للوصول إلى الدواء</h1>
+    <p class="subtitle">ابحث عن دوائك، اعثر على أقرب صيدلية متوفر فيها الدواء أو تواصل مباشرة مع الصيدلي في ثوانٍ.</p>
+
+    <div class="stats">
+        <div class="stat-item">
+            <h3>+120</h3>
+            <p>صيدلية مسجلة</p>
+        </div>
+        <div class="stat-item">
+            <h3>+4,000</h3>
+            <p>عملية بحث يومياً</p>
+        </div>
+        <div class="stat-item">
+            <h3>&lt; 10s</h3>
+            <p>متوسط وقت الاتصال</p>
+        </div>
+    </div>
+
+    <div class="interactive-card">
+        <h2 style="margin-top: 0; color: #3498db;">جرب PharmaNear الآن 🎯</h2>
+
+        <div class="btn-group">
+            <button class="btn-gps" id="gpsBtn" onclick="findByGPS()">📍 تحديد موقعي الحالي والأقرب فوراً</button>
+
+            <div class="search-box">
+                <input type="text" id="areaInput" class="search-input" placeholder="أو اكتب اسم حلتك/شارعك (مثل: شرق النيل الفيحاء)">
+                <button class="btn-search" onclick="findByArea()">بحث 🔍</button>
+            </div>
+        </div>
+
+        <div id="msg"></div>
+        <div id="list" class="results-container"></div>
+    </div>
+</div>
+
+<script>
+let lastResults = [];
+
+function setMsg(text, color) {
+    const msg = document.getElementById('msg');
+    msg.style.color = color || '#f1c40f';
+    msg.innerText = text;
+}
+
+function showError(text) { setMsg(text, '#e74c3c'); }
+
+function escapeHtml(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, s => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[s]));
+}
+
+function findByGPS() {
+    const btn = document.getElementById('gpsBtn');
+    document.getElementById('list').innerHTML = '';
+    setMsg('⏳ جاري التقاط الـ GPS واستكشاف أقرب الصيدليات...');
+
+    if (!navigator.geolocation) {
+        showError('خاصية الـ GPS غير مدعومة في متصفحك.');
+        return;
+    }
+
+    btn.disabled = true;
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            fetch(`/api/pharmacies?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
+                .then(res => res.json())
+                .then(data => renderResults(data))
+                .catch(() => showError('خطأ في الاتصال بالخادم.'))
+                .finally(() => { btn.disabled = false; });
+        },
+        () => {
+            btn.disabled = false;
+            showError('يرجى السماح بالوصول للـ GPS لتحديد موقعك.');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
+function findByArea() {
+    const area = document.getElementById('areaInput').value.trim();
+    if (!area) {
+        showError('الرجاء إدخال اسم الحي أو المنطقة أولاً.');
+        return;
+    }
+    document.getElementById('list').innerHTML = '';
+    setMsg(`⏳ جاري البحث عن صيدليات في (${area})...`);
+
+    fetch(`/api/pharmacies?query=${encodeURIComponent(area)}`)
+        .then(res => res.json())
+        .then(data => renderResults(data))
+        .catch(() => showError('خطأ في الاتصال بالخادم.'));
+}
+
+function renderResults(data) {
+    const list = document.getElementById('list');
+    list.innerHTML = '';
+
+    // Surface real server-side failures (bad key, exhausted quota, timeout)
+    // instead of disguising them as "no pharmacies found".
+    if (!data || data.status !== 'success') {
+        showError((data && data.message) || 'حدث خطأ غير متوقع.');
+        return;
+    }
+
+    if (!data.data || data.data.length === 0) {
+        showError('لم يتم العثور على صيدليات في هذا النطاق.');
+        return;
+    }
+
+    lastResults = data.data;
+    setMsg('');
+
+    data.data.forEach((p, i) => {
+        const hasCoords = p.latitude != null && p.longitude != null;
+        const hasPhone = !!(p.phone && String(p.phone).trim());
+
+        let actions = '';
+        if (hasCoords) {
+            actions += `<a class="act act-dir" target="_blank" rel="noopener"
+                href="https://www.google.com/maps/dir/?api=1&destination=${p.latitude},${p.longitude}">الاتجاهات 🗺️</a>`;
+        }
+        if (hasPhone) {
+            const digits = String(p.phone).replace(/[^\d]/g, '');
+            const waText = encodeURIComponent(`مرحباً، أريد الاستفسار عن توفر دواء في ${p.name}.`);
+            actions += `<a class="act act-call" href="tel:${escapeHtml(p.phone)}">اتصال 📞</a>`;
+            actions += `<a class="act act-wa" target="_blank" rel="noopener" href="https://wa.me/${digits}?text=${waText}">واتساب 💬</a>`;
+        } else if (hasCoords) {
+            actions += `<button class="act act-share" onclick="shareLocation(${i})">مشاركة الموقع 📤</button>`;
+        }
+
+        list.innerHTML += `
+            <div class="pharmacy-item">
+                <h3>${escapeHtml(p.name)}</h3>
+                <p>📍 <b>العنوان:</b> ${escapeHtml(p.address)}</p>
+                <p>📏 <b>المسافة:</b> ${escapeHtml(p.distance_text)}</p>
+                ${hasPhone ? `<p>📞 <b>الهاتف:</b> ${escapeHtml(p.phone)}</p>` : ''}
+                <p>🕒 <b>الحالة:</b> ${escapeHtml(p.status)}</p>
+                <div class="actions">${actions}</div>
+            </div>
+        `;
+    });
+}
+
+async function shareLocation(index) {
+    const p = lastResults[index];
+    if (!p) return;
+    const link = `https://www.google.com/maps/dir/?api=1&destination=${p.latitude},${p.longitude}`;
+    const text = `📍 ${p.name}\nموقع الصيدلية على الخريطة:\n${link}`;
+
+    if (navigator.share) {
+        try {
+            await navigator.share({ title: p.name, text: text, url: link });
+            return;
+        } catch (err) {
+            // User dismissed the native share sheet — fall through to WhatsApp.
+        }
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+}
+</script>
+
+</body>
+</html>
