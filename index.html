@@ -1033,19 +1033,39 @@ function whatsappUrl(phone, text) {
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
+// Safely parses a fetch response as JSON. If the server (or a platform-level
+// error page, e.g. a 404 route mismatch) returns HTML instead of JSON, this
+// throws a clear, readable error instead of letting `.json()` crash with a
+// cryptic "Unexpected token '<'/'T' ... is not valid JSON" message.
+async function safeFetchJson(url, options) {
+  const res = await fetch(url, options);
+  const contentType = res.headers.get('content-type') || '';
+
+  if (!contentType.includes('application/json')) {
+    const bodyPreview = (await res.text()).slice(0, 120);
+    throw new Error(
+      currentLang === 'ar'
+        ? `الخادم أرجع استجابة غير متوقعة (HTTP ${res.status}) بدل JSON — تحقق من مسار الـ API.`
+        : `Server returned an unexpected response (HTTP ${res.status}) instead of JSON — check the API route.`
+    );
+  }
+
+  const data = await res.json();
+  if (!res.ok && !data) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+  return data;
+}
+
 async function apiGet(path) {
-  const res = await fetch(path);
-  if (!res.ok) throw new Error(`GET ${path} failed: ${res.status}`);
-  return res.json();
+  return safeFetchJson(path);
 }
 async function apiSend(path, method, body) {
-  const res = await fetch(path, {
+  return safeFetchJson(path, {
     method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`${method} ${path} failed: ${res.status}`);
-  return res.json();
 }
 
 /* ============ GEOLOCATION (HTML5 API) ============ */
@@ -1065,14 +1085,16 @@ function captureLocation() {
 
   navigator.geolocation.getCurrentPosition(
     pos => {
-      userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      userCoords = { lat: lat, lng: lon };
       btn.classList.remove('loading');
       status.className = 'locate-status success';
       status.textContent = currentLang === 'ar' ? 'تم تحديد موقعك ✓' : 'Location set ✓';
       // Skip the typing-debounce here — an explicit "detect my location" click
       // should refresh the results immediately, not after a delay.
       clearTimeout(searchDebounceTimer);
-      fetchAndRender();
+      fetchAndRender(lat, lon);
     },
     () => {
       btn.classList.remove('loading');
@@ -1227,8 +1249,9 @@ function renderPharmacies() {
 
 // Called after GPS succeeds: asks the Flask backend for real pharmacies around
 // the visitor and swaps them in for the built-in directory.
-async function fetchAndRender() {
-  if (!userCoords) { renderPharmacies(); return; }
+// Uses the exact endpoint the backend exposes: /api/pharmacies?lat=&lon=
+async function fetchAndRender(lat, lon) {
+  if (lat == null || lon == null) { renderPharmacies(); return; }
 
   document.getElementById('card-list').innerHTML =
     `<div class="loading-text">${currentLang === 'ar' ? 'جارٍ البحث عن أقرب الصيدليات...' : 'Searching for the nearest pharmacies...'}</div>`;
@@ -1236,8 +1259,7 @@ async function fetchAndRender() {
   const status = document.getElementById('locate-status');
 
   try {
-    const res = await fetch(`/api/pharmacies?lat=${userCoords.lat}&lon=${userCoords.lng}`);
-    const data = await res.json();
+    const data = await safeFetchJson('/api/pharmacies?lat=' + lat + '&lon=' + lon);
 
     if (data.status !== 'success') {
       // Surface the real reason (bad key, exhausted quota, upstream timeout)
@@ -1264,6 +1286,47 @@ async function fetchAndRender() {
       : `Couldn't fetch nearby pharmacies (${err.message}) — showing listed pharmacies.`;
     activePharmacies = DEFAULT_PHARMACIES;
     renderPharmacies();
+  }
+}
+
+// Manual area/district search — same endpoint, `query` param instead of
+// coordinates. Triggered by pressing Enter in the search box (see the
+// keydown listener near DOMContentLoaded below); typing without Enter still
+// just filters the currently loaded medicines locally, as before.
+async function searchByArea(area) {
+  if (!area) return;
+
+  document.getElementById('card-list').innerHTML =
+    `<div class="loading-text">${currentLang === 'ar' ? `جارٍ البحث في (${area})...` : `Searching in (${area})...`}</div>`;
+
+  const status = document.getElementById('locate-status');
+  status.className = 'locate-status';
+  status.textContent = '';
+
+  try {
+    const data = await safeFetchJson('/api/pharmacies?query=' + encodeURIComponent(area));
+
+    if (data.status !== 'success') {
+      throw new Error(data.message || 'Unknown server error');
+    }
+
+    if (!data.data || data.data.length === 0) {
+      status.className = 'locate-status error';
+      status.textContent = currentLang === 'ar'
+        ? `لم نجد صيدليات في (${area}) — هذه هي صيدلياتنا المسجّلة.`
+        : `No pharmacies found in (${area}) — showing our listed pharmacies.`;
+      activePharmacies = DEFAULT_PHARMACIES;
+      renderPharmacies();
+      return;
+    }
+
+    activePharmacies = data.data.map(normalizeLive);
+    renderPharmacies();
+  } catch (err) {
+    status.className = 'locate-status error';
+    status.textContent = currentLang === 'ar'
+      ? `تعذّر البحث في (${area}) (${err.message}).`
+      : `Couldn't search in (${area}) (${err.message}).`;
   }
 }
 
@@ -1625,6 +1688,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // Show the listed pharmacies right away. GPS is only requested when the
   // visitor actually taps the 📍 button next to the search box.
   renderPharmacies();
+
+  // Pressing Enter in the search box searches the backend by area/district
+  // name (fetch('/api/pharmacies?query=...')) — typing without pressing
+  // Enter still just filters the currently loaded medicines locally.
+  const searchInput = document.getElementById('search-input');
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const area = searchInput.value.trim();
+      if (area) searchByArea(area);
+    }
+  });
 });
 </script>
 </body>
