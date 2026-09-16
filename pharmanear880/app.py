@@ -1,17 +1,15 @@
 """
 PharmaNear — Flask backend (Vercel-ready).
 
-كل المسارات تحت بادئات لا تحجزها Vercel:
-    /pharmacy-search              GET   — بحث بالـ GPS أو باسم المنطقة
-    /pharmacies                   POST  — تسجيل صيدلية (بوابة الصيدلي)
-    /pharmacies/<id>              PUT   — تحديث بيانات صيدلية
-    /pharmacies/<id>/medicines    POST  — إضافة دواء
-    /medicines/<id>               PUT   — تحديث دواء
-    /medicines/<id>               DELETE— حذف دواء
+المسارات:
+    /pharmacy-search              GET
+    /pharmacies                   POST
+    /pharmacies/<id>              PUT
+    /pharmacies/<id>/medicines    POST
+    /medicines/<id>               PUT
+    /medicines/<id>               DELETE
 
-لا نستخدم أبداً البادئة /api/ لأن Vercel يحجزها لـ Serverless Functions
-ويحاول اعتراضها قبل وصولها إلى Flask — فيرجع HTML بدل JSON، وهو سبب
-الخطأ "Unexpected token 'T', \"The page c...\" is not valid JSON".
+لا نستخدم بادئة /api/ لأن Vercel يحجزها ويرجع HTML بدل JSON.
 """
 
 import os
@@ -34,14 +32,9 @@ SERPAPI_KEY = os.environ.get("SERPAPI_KEY")
 SERPAPI_URL = "https://serpapi.com/search.json"
 REQUEST_TIMEOUT_S = 15
 
-# مخزن مؤقت في الذاكرة لبيانات بوابة الصيدلي.
-# في الإنتاج الحقيقي استبدله بقاعدة بيانات (Postgres / Supabase / Firebase).
 _LOCK = threading.Lock()
-_PHARMACIES = {}   # id -> dict
-_MEDICINES = {}    # id -> dict
+_PHARMACIES = {}
 
-
-# ---------- أدوات مساعدة ----------
 
 def calculate_distance_meters(lat1, lon1, lat2, lon2):
     R = 6371000
@@ -66,10 +59,6 @@ def json_error(message, status=400):
     return jsonify({"status": "error", "message": message}), status
 
 
-# ---------- معالجات أخطاء تُرجع JSON بدل HTML ----------
-# هذا مهم جداً على Vercel: أي استثناء غير متوقع يجب أن يُرجع JSON
-# حتى لا ينكسر response.json() على الواجهة.
-
 @app.errorhandler(404)
 def _not_found(e):
     return json_error("المسار غير موجود على الخادم.", 404)
@@ -87,19 +76,14 @@ def _server_error(e):
 
 @app.errorhandler(Exception)
 def _unhandled(e):
-    # لا نكشف تفاصيل داخلية، لكن نضمن JSON دائماً.
     app.logger.exception("Unhandled error: %s", e)
     return json_error("حدث خطأ غير متوقع على الخادم.", 500)
 
-
-# ---------- الصفحة الرئيسية ----------
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
-
-# ---------- بحث الصيدليات (SerpAPI Google Maps) ----------
 
 @app.route("/pharmacy-search", methods=["GET"])
 def get_pharmacies():
@@ -183,8 +167,6 @@ def get_pharmacies():
     })
 
 
-# ---------- بوابة الصيدلي: تسجيل صيدلية ----------
-
 @app.route("/pharmacies", methods=["POST"])
 def create_pharmacy():
     body = request.get_json(silent=True) or {}
@@ -225,8 +207,6 @@ def update_pharmacy(pid):
                 rec[key] = body[key]
     return jsonify(rec)
 
-
-# ---------- بوابة الصيدلي: الأدوية ----------
 
 @app.route("/pharmacies/<pid>/medicines", methods=["POST"])
 def add_medicine(pid):

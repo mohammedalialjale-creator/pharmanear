@@ -1,12 +1,7 @@
 <script>
 /* ==========================================================================
    PharmaNear — frontend logic
-   Talks to the Flask backend at custom routes (see app.py). No page reloads —
-   everything below is fetch() + DOM updates.
-   IMPORTANT: we never use the /api/ prefix — Vercel reserves it for its own
-   Serverless Functions and will return an HTML error page instead of JSON,
-   which is what caused the "Unexpected token 'T', 'The page c...' is not
-   valid JSON" error.
+   IMPORTANT: لا نستخدم /api/ إطلاقاً — Vercel يحجزها ويرجع HTML بدل JSON.
    ========================================================================== */
 
 let currentLang = 'ar';
@@ -20,11 +15,6 @@ let userCoords = null;
 let searchDebounceTimer = null;
 let lastResults = [];
 
-/* ============================================================
-   الصيدليات المسجّلة — تظهر فوراً عند فتح الصفحة.
-   عند الضغط على زر "موقعي 📍" يتم استبدالها بالصيدليات الحقيقية
-   القريبة من موقع الزائر عبر /pharmacy-search.
-   ============================================================ */
 const DEFAULT_PHARMACIES = [
   {
     name: { en: 'Al-Fayha Pharmacy', ar: 'صيدلية الفيحاء' },
@@ -114,10 +104,6 @@ function whatsappUrl(phone, text) {
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
-// Safely parses a fetch response as JSON. If the server (or a platform-level
-// error page, e.g. Vercel's HTML 404) returns HTML instead of JSON, this
-// throws a clear, readable error instead of letting `.json()` crash with a
-// cryptic "Unexpected token '<'/'T' ... is not valid JSON" message.
 async function safeFetchJson(url, options) {
   const res = await fetch(url, options);
   const contentType = res.headers.get('content-type') || '';
@@ -126,7 +112,7 @@ async function safeFetchJson(url, options) {
     const preview = (await res.text()).slice(0, 120).replace(/\s+/g, ' ');
     throw new Error(
       currentLang === 'ar'
-        ? `الخادم أرجع HTML بدل JSON (HTTP ${res.status}). تحقق من إعدادات Vercel routes. مقتطف: ${preview}`
+        ? `الخادم أرجع HTML بدل JSON (HTTP ${res.status}). تحقق من Vercel routes. مقتطف: ${preview}`
         : `Server returned HTML instead of JSON (HTTP ${res.status}). Check Vercel routes. Preview: ${preview}`
     );
   }
@@ -146,7 +132,7 @@ async function apiSend(path, method, body) {
   });
 }
 
-/* ============ GEOLOCATION (HTML5 API) ============ */
+/* ============ GEOLOCATION ============ */
 function captureLocation() {
   const btn = document.getElementById('detect-btn');
   const status = document.getElementById('locate-status');
@@ -183,7 +169,7 @@ function captureLocation() {
   );
 }
 
-/* ============ NAV HELPERS ============ */
+/* ============ NAV ============ */
 function goToApp(view) {
   switchApp(view);
   document.getElementById('app').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -200,7 +186,7 @@ function switchApp(view) {
   if (view === 'pharmacist') showPharmacistStage(pharmacistStage);
 }
 
-/* ============ PHARMACIST VERIFICATION FLOW ============ */
+/* ============ PHARMACIST FLOW ============ */
 function showPharmacistStage(stage) {
   pharmacistStage = stage;
   document.getElementById('pharmacist-gate').hidden = stage !== 'gate';
@@ -239,8 +225,6 @@ async function submitVerification(e) {
     <div class="row"><span>${lang === 'ar' ? 'رقم الهاتف' : 'Phone'}</span><b>${escapeHtml(phone)}</b></div>
   `;
 
-  // Register a real (but initially closed) pharmacy row in the backend store.
-  // NOTE: /pharmacies (NOT /api/pharmacies) — Vercel reserves /api/*.
   try {
     const pharmacy = await apiSend('/pharmacies', 'POST', {
       name_en: name, name_ar: name,
@@ -258,7 +242,6 @@ async function submitVerification(e) {
       medicines: [],
     };
   } catch (err) {
-    // Quietly keep this as a local-only demo record if the API call didn't go through.
     myPharmacyId = null;
     myPharmacy = {
       id: null, name: { en: name, ar: name }, address: { en: city, ar: city },
@@ -272,7 +255,7 @@ async function submitVerification(e) {
 function previewDashboard() { showPharmacistStage('dashboard'); }
 function editApplication() { showPharmacistStage('gate'); }
 
-/* ============ LANGUAGE / RTL ============ */
+/* ============ LANGUAGE ============ */
 function setLang(lang) {
   currentLang = lang;
   document.documentElement.lang = lang;
@@ -287,7 +270,7 @@ function setLang(lang) {
   if (myPharmacy) renderPharmacistDashboard();
 }
 
-/* ============ CUSTOMER: SEARCH + FILTERS + RENDER ============ */
+/* ============ CUSTOMER ============ */
 function setFilter(filter, btn) {
   currentFilter = filter;
   document.querySelectorAll('#filter-row .chip').forEach(c => c.classList.remove('active'));
@@ -326,9 +309,6 @@ function renderPharmacies() {
   renderResults(applyLocalFilters(activePharmacies));
 }
 
-// Called after GPS succeeds: asks the Flask backend for real pharmacies around
-// the visitor and swaps them in for the built-in directory.
-// Uses /pharmacy-search (NOT /api/pharmacy-search).
 async function fetchAndRender(lat, lon) {
   if (lat == null || lon == null) { renderPharmacies(); return; }
 
@@ -366,9 +346,6 @@ async function fetchAndRender(lat, lon) {
   }
 }
 
-// Manual area/district search — same endpoint, `query` param instead of
-// coordinates. Triggered by pressing Enter in the search box.
-// Uses /pharmacy-search (NOT /api/pharmacy-search).
 async function searchByArea(area) {
   if (!area) return;
 
@@ -406,7 +383,6 @@ async function searchByArea(area) {
   }
 }
 
-// Maps a row from /pharmacy-search into the shape the cards already expect.
 function normalizeLive(p) {
   return {
     name: { en: p.name, ar: p.name },
@@ -459,28 +435,4 @@ function renderResults(results) {
 
     const directionsBtn = `
       <a class="action-btn map" href="${directionsUrl(ph)}" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 21s-7-6.1-7-11.5A7 7 0 0119 9.5C19 14.9 12 21 12 21z" stroke="currentColor" stroke-width="2"/>
-          <circle cx="12" cy="9.5" r="2.3" stroke="currentColor" stroke-width="2"/>
-        </svg>
-        ${lang === 'ar' ? 'الاتجاهات 🗺️' : 'Directions 🗺️'}
-      </a>`;
-
-    const hasPhone = !!(ph.phone && String(ph.phone).trim());
-    let contactButtons;
-    let columnClass;
-
-    if (hasPhone) {
-      const waText = lang === 'ar'
-        ? `مرحباً، أريد الاستفسار عن توفر دواء في ${ph.name.ar || ph.name.en}.`
-        : `Hello, I'd like to ask about medicine availability at ${ph.name.en}.`;
-      contactButtons = `
-        <a class="action-btn call" href="${telUrl(ph.phone)}">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" fill="currentColor"/>
-          </svg>
-          ${lang === 'ar' ? 'اتصال 📞' : 'Call 📞'}
-        </a>
-        <a class="action-btn whatsapp" href="${whatsappUrl(ph.phone, waText)}" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www
