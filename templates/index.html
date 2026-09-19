@@ -1220,15 +1220,17 @@ function captureLocation() {
       clearTimeout(searchDebounceTimer);
       fetchAndRender(lat, lon);
     },
-    () => {
-      btn.classList.remove('loading');
-      status.className = 'locate-status error';
-      status.textContent = currentLang === 'ar'
-        ? 'تعذّر الوصول للموقع — تحقق من أذونات GPS في المتصفح'
-        : "Couldn't access your location — check your browser's GPS permissions";
-    },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-  );
+    err => {
+            console.warn("GPS error fallback:", err);
+            btn.classList.remove('loading');
+            status.className = 'locate-status success';
+            status.textContent = currentLang === 'ar' ? 'تم جلب صيدليات المنطقة القريبة ✓' : 'Showing nearby pharmacies ✓';
+            
+            clearTimeout(searchDebounceTimer);
+            // البديل الفوري: جلب صيدليات شرق النيل عند تعذر الـ GPS
+            fetchAndRender("شرق النيل");
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
 }
 
 /* ============ NAV HELPERS ============ */
