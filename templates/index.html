@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PharmaNear — بوابتك الذكية للدواء</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-950:#0b1320;
+    --navy-900:#0f172a;
+    --card-800:#1e293b;
+    --card-700:#263449;
+    --line-700:#2f3d54;
+    --emerald-500:#10b981;
+    --emerald-400:#34d399;
+    --emerald-glow:rgba(16,185,129,.18);
+    --gold-500:#f59e0b;
+    --gold-400:#fbbf47;
+    --gold-glow:rgba(245,158,11,.22);
+    --red-400:#f87171;
+    --text-hi:#f1f5f9;
+    --text-mid:#c3cede;
+    --text-low:#7c8aa3;
+
+    --radius-lg:22px;
+    --radius-md:14px;
+    --radius-sm:10px;
+    --radius-pill:999px;
+
+    --font-en:'Manrope',sans-serif;
+    --font-ar:'Tajawal',sans-serif;
+    --shadow-card:0 1px 2px rgba(0,0,0,.4), 0 12px 28px -12px rgba(0,0,0,.6);
+    --shadow-lift:0 20px 50px -20px rgba(0,0,0,.65);
+    --max-w:1180px;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{-webkit-tap-highlight-color:transparent; scroll-behavior:smooth;}
+  body{
+    background:var(--navy-900);
+    color:var(--text-hi);
+    font-family:var(--font-ar);
+    min-height:100vh;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  html[lang="en"] body{ font-family:var(--font-en); }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:.001ms !important; transition-duration:.001ms !important; scroll-behavior:auto !important;} }
+
+  a{color:inherit; text-decoration:none;}
+  button{font-family:inherit; cursor:pointer;}
+  input, select{font-family:inherit;}
+  ::selection{background:var(--emerald-glow); color:var(--text-hi);}
+  img,svg{display:block;}
+
+  .shell{max-width:var(--max-w); margin:0 auto; padding:0 20px;}
+
+  [data-en], [data-ar]{}
+  html[lang="ar"] [data-en-only]{display:none !important;}
+  html[lang="en"] [data-ar-only]{display:none !important;}
+
+  /* ============ HEADER ============ */
+  .site-header{
+    position:sticky; top:0; z-index:40;
+    backdrop-filter:blur(16px) saturate(150%);
+    background:rgba(11,19,32,.78);
+    border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .header-inner{
+    max-width:var(--max-w); margin:0 auto; padding:16px 20px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:40px; height:40px; border-radius:12px; flex-shrink:0;
+    background:linear-gradient(150deg, var(--emerald-400), #059669 65%, var(--gold-500));
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 8px 18px -6px rgba(16,185,129,.55);
+  }
+  .brand-mark svg{width:22px; height:22px;}
+  .brand-name{font-size:18px; font-weight:800; letter-spacing:-.02em;}
+  .brand-name span{color:var(--emerald-400);}
+
+  .header-actions{display:flex; align-items:center; gap:10px;}
+  .lang-toggle{
+    display:flex; align-items:center; gap:2px;
+    background:var(--card-800); border:1px solid var(--line-700);
+    border-radius:var(--radius-pill); padding:3px;
+  }
+  .lang-toggle button{
+    border:none; background:transparent; color:var(--text-low);
+    font-size:12.5px; font-weight:700; padding:7px 13px; border-radius:var(--radius-pill);
+    transition:background .18s ease, color .18s ease;
+  }
+  .lang-toggle button.active{background:var(--emerald-500); color:#04150f;}
+
+  .btn-portal{
+    display:flex; align-items:center; gap:8px;
+    background:var(--card-800); border:1px solid var(--line-700); color:var(--text-hi);
+    font-size:13px; font-weight:700; padding:10px 16px; border-radius:var(--radius-pill);
+    transition:border-color .16s ease, background .16s ease;
+    white-space:nowrap;
+  }
+  .btn-portal svg{width:15px; height:15px; color:var(--gold-400); flex-shrink:0;}
+  .btn-portal:hover{border-color:var(--gold-500); background:var(--card-700);}
+  @media (max-width:640px){ .btn-portal span{display:none;} .btn-portal{padding:10px 12px;} }
+
+  /* ============ HERO ============ */
+  .hero{
+    position:relative; padding:64px 0 52px; overflow:hidden;
+    background:
+      radial-gradient(900px 460px at 12% -8%, rgba(16,185,129,.14), transparent 60%),
+      radial-gradient(700px 420px at 95% 6%, rgba(245,158,11,.10), transparent 55%);
+  }
+  .pulse-line{
+    position:absolute; inset-inline:0; bottom:0; width:100%; height:120px;
+    opacity:.35; pointer-events:none;
+  }
+  .hero-inner{max-width:var(--max-w); margin:0 auto; padding:0 20px; position:relative; text-align:center;}
+  .hero h1{
+    font-size:34px; font-weight:800; letter-spacing:-.02em; line-height:1.35;
+    max-width:19ch; margin:0 auto;
+  }
+  .hero p.sub{
+    color:var(--text-mid); font-size:16px; max-width:52ch; margin:18px auto 0; line-height:1.7;
+  }
+  .hero-ctas{display:flex; gap:14px; justify-content:center; margin-top:34px; flex-wrap:wrap;}
+  .btn-hero{
+    display:inline-flex; align-items:center; gap:10px;
+    font-size:15px; font-weight:700; padding:16px 26px; border-radius:var(--radius-md);
+    transition:transform .14s ease, box-shadow .14s ease, background .16s ease;
+  }
+  .btn-hero svg{width:18px; height:18px; flex-shrink:0;}
+  .btn-hero:active{transform:scale(.97);}
+  .btn-hero.gold{
+    background:linear-gradient(135deg, var(--gold-400), var(--gold-500));
+    color:#241300; box-shadow:0 14px 30px -12px var(--gold-glow);
+  }
+  .btn-hero.gold:hover{box-shadow:0 18px 36px -12px var(--gold-glow); transform:translateY(-1px);}
+  .btn-hero.outline{
+    background:transparent; border:1.5px solid var(--emerald-500); color:var(--emerald-400);
+  }
+  .btn-hero.outline:hover{background:rgba(16,185,129,.08); transform:translateY(-1px);}
+
+  .hero-stats{
+    display:flex; justify-content:center; gap:36px; margin-top:52px; flex-wrap:wrap;
+  }
+  .hero-stat b{display:block; font-size:24px; font-weight:800; color:var(--text-hi);}
+  .hero-stat span{font-size:12.5px; color:var(--text-low);}
+
+  /* ============ APP SECTION ============ */
+  .app-section{padding:56px 0 60px;}
+  .section-head{text-align:center; max-width:560px; margin:0 auto 30px;}
+  .section-kicker{
+    font-size:12.5px; font-weight:700; color:var(--emerald-400); margin-bottom:10px;
+    display:inline-block;
+  }
+  .section-head h2{font-size:25px; font-weight:800; letter-spacing:-.02em;}
+  .section-head p{color:var(--text-mid); font-size:14.5px; margin-top:8px;}
+
+  .app-frame{
+    max-width:600px; margin:0 auto;
+    background:var(--navy-950); border:1px solid var(--line-700);
+    border-radius:26px; padding:8px; box-shadow:var(--shadow-lift);
+  }
+  .app-tabs{
+    display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:6px;
+  }
+  .app-tab{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    border:none; background:transparent; color:var(--text-low);
+    font-size:13.5px; font-weight:700; padding:13px 10px; border-radius:16px;
+    transition:all .16s ease;
+  }
+  .app-tab svg{width:16px; height:16px; flex-shrink:0;}
+  .app-tab.active{background:var(--emerald-500); color:#04150f;}
+  .app-panel[hidden]{display:none;}
+  .app-body{background:var(--card-800); border-radius:20px; padding:20px 18px 24px; margin-top:2px;}
+
+  /* ---- shared bits reused inside app ---- */
+  .search-shell{position:relative;}
+  .search-shell svg.icon-search{
+    position:absolute; inset-inline-start:16px; top:50%; transform:translateY(-50%);
+    width:19px; height:19px; color:var(--text-low); pointer-events:none;
+  }
+  .search-input{
+    width:100%; background:var(--navy-950); border:1px solid var(--line-700);
+    color:var(--text-hi); border-radius:var(--radius-md);
+    padding:15px 16px 15px 46px; font-size:15px; outline:none;
+    transition:border-color .18s ease, box-shadow .18s ease;
+  }
+  html[dir="rtl"] .search-input{ padding:15px 46px 15px 16px; }
+  .search-input::placeholder{color:var(--text-low);}
+  .search-input:focus{border-color:var(--emerald-500); box-shadow:0 0 0 4px var(--emerald-glow);}
+
+  .filter-row{display:flex; gap:8px; margin-top:12px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none;}
+  .filter-row::-webkit-scrollbar{display:none;}
+  .chip{
+    flex-shrink:0; border:1px solid var(--line-700); background:var(--navy-950);
+    color:var(--text-mid); font-size:12.5px; font-weight:600; padding:8px 14px;
+    border-radius:var(--radius-pill); transition:all .16s ease; white-space:nowrap;
+  }
+  .chip.active{background:var(--emerald-500); border-color:var(--emerald-500); color:#04150f;}
+
+  .mini-label{display:flex; align-items:baseline; justify-content:space-between; margin:20px 0 10px;}
+  .mini-label h3{font-size:13.5px; font-weight:700; color:var(--text-hi);}
+  .mini-label .count{font-size:11.5px; color:var(--text-low);}
+
+  .card-list{display:flex; flex-direction:column; gap:11px;}
+  .pcard{ background:var(--navy-950); border:1px solid var(--line-700); border-radius:16px; padding:15px; }
+  .pcard-top{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .pcard-name-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .pcard-name{font-size:15px; font-weight:700; letter-spacing:-.01em;}
+  .status-dot{width:7px; height:7px; border-radius:50%; flex-shrink:0;}
+  .status-dot.open{background:var(--emerald-400); box-shadow:0 0 0 3px var(--emerald-glow);}
+  .status-dot.closed{background:var(--text-low);}
+  .pcard-meta{display:flex; align-items:center; gap:6px; margin-top:4px; color:var(--text-low); font-size:12px;}
+  .pcard-meta .dot-sep{width:3px; height:3px; border-radius:50%; background:var(--text-low);}
+  .open-text{color:var(--emerald-400); font-weight:600;}
+  .closed-text{color:var(--text-low); font-weight:600;}
+
+  .distance-badge{
+    flex-shrink:0; display:flex; align-items:center; gap:4px;
+    background:var(--card-800); border:1px solid var(--line-700);
+    color:var(--text-mid); font-size:11.5px; font-weight:700;
+    padding:6px 10px; border-radius:var(--radius-pill);
+  }
+  .distance-badge svg{width:12px; height:12px; color:var(--emerald-400);}
+
+  .med-list{margin-top:13px; display:flex; flex-direction:column; gap:7px;}
+  .med-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--card-800); border:1px solid var(--line-700);
+    border-radius:var(--radius-sm); padding:10px 12px;
+  }
+  .med-row .med-name{font-size:13px; font-weight:600; color:var(--text-hi);}
+  .med-row .med-form{font-size:11px; color:var(--text-low); margin-top:1px;}
+  .med-row .med-price{font-size:11px; color:var(--gold-400); font-weight:700; margin-top:1px;}
+  .stock-tag{
+    flex-shrink:0; font-size:10.5px; font-weight:700; padding:4px 9px; border-radius:var(--radius-pill);
+    display:flex; align-items:center; gap:5px;
+  }
+  .stock-tag::before{content:''; width:6px; height:6px; border-radius:50%;}
+  .stock-tag.in{background:rgba(16,185,129,.14); color:var(--emerald-400);}
+  .stock-tag.in::before{background:var(--emerald-400);}
+  .stock-tag.low{background:rgba(245,158,11,.14); color:var(--gold-400);}
+  .stock-tag.low::before{background:var(--gold-400);}
+  .stock-tag.out{background:rgba(248,113,113,.12); color:var(--red-400);}
+  .stock-tag.out::before{background:var(--red-400);}
+
+  .pcard-actions{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:13px;}
+  .action-btn{
+    display:flex; align-items:center; justify-content:center; gap:7px;
+    padding:11px 10px; border-radius:var(--radius-md); font-size:13px; font-weight:700;
+    border:1px solid var(--line-700); transition:transform .12s ease, background .16s ease, border-color .16s ease;
+  }
+  .action-btn svg{width:15px; height:15px; flex-shrink:0;}
+  .action-btn:active{transform:scale(.97);}
+  .action-btn.call{background:var(--emerald-500); color:#04150f; border-color:var(--emerald-500);}
+  .action-btn.call:hover{background:var(--emerald-400);}
+  .action-btn.map{background:transparent; color:var(--text-hi);}
+  .action-btn.map:hover{border-color:var(--emerald-500); color:var(--emerald-400);}
+
+  .empty-state{ display:none; flex-direction:column; align-items:center; text-align:center; padding:42px 16px 12px; color:var(--text-low); }
+  .loading-text{ text-align:center; padding:40px 16px; color:var(--text-low); font-size:13px; }
+  .empty-state.show{display:flex;}
+  .empty-state svg{width:36px; height:36px; margin-bottom:12px; color:var(--line-700);}
+  .empty-state h4{font-size:14px; color:var(--text-hi); font-weight:700; margin-bottom:5px;}
+  .empty-state p{font-size:12.5px; max-width:30ch;}
+
+  /* ---- pharmacist dashboard ---- */
+  .info-card{ background:var(--navy-950); border:1px solid var(--line-700); border-radius:16px; padding:16px; }
+  .info-card-top{display:flex; align-items:flex-start; justify-content:space-between; gap:12px;}
+  .ghost-input{
+    background:transparent; border:none; border-bottom:1px dashed transparent;
+    color:var(--text-hi); font-size:16px; font-weight:800; padding:2px 0; width:100%;
+  }
+  .ghost-input:hover, .ghost-input:focus{border-bottom-color:var(--line-700); outline:none;}
+
+  .toggle-switch{position:relative; display:inline-flex; flex-shrink:0; cursor:pointer;}
+  .toggle-switch input{position:absolute; opacity:0; width:1px; height:1px;}
+  .toggle-track{
+    width:46px; height:26px; background:var(--card-800); border:1px solid var(--line-700);
+    border-radius:var(--radius-pill); position:relative; transition:background .18s ease, border-color .18s ease;
+  }
+  .toggle-thumb{
+    position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%;
+    background:var(--text-low); transition:transform .18s ease, background .18s ease;
+  }
+  .toggle-switch input:checked + .toggle-track{background:rgba(16,185,129,.18); border-color:var(--emerald-500);}
+  .toggle-switch input:checked + .toggle-track .toggle-thumb{transform:translateX(20px); background:var(--emerald-400);}
+  html[dir="rtl"] .toggle-thumb{left:auto; right:2px;}
+  html[dir="rtl"] .toggle-switch input:checked + .toggle-track .toggle-thumb{transform:translateX(-20px);}
+
+  .status-caption{font-size:12px; color:var(--text-low); margin-top:4px;}
+  .status-caption.is-open{color:var(--emerald-400); font-weight:600;}
+
+  .info-fields{display:flex; flex-direction:column; gap:11px; margin-top:15px;}
+  .field label{display:block; font-size:11.5px; color:var(--text-low); font-weight:600; margin-bottom:6px;}
+  .field input, .field select{
+    width:100%; background:var(--card-800); border:1px solid var(--line-700);
+    color:var(--text-hi); border-radius:var(--radius-sm); padding:11px 12px; font-size:13px;
+    outline:none; transition:border-color .16s ease, box-shadow .16s ease;
+  }
+  .field input:focus, .field select:focus{border-color:var(--emerald-500); box-shadow:0 0 0 4px var(--emerald-glow);}
+
+  .btn-primary{
+    margin-top:15px; width:100%; background:var(--emerald-500); color:#04150f;
+    border:none; font-size:13.5px; font-weight:700; padding:13px; border-radius:var(--radius-md);
+    transition:background .16s ease, transform .12s ease;
+  }
+  .btn-primary:hover{background:var(--emerald-400);}
+  .btn-ghost{
+    margin-top:15px; width:100%; background:transparent; color:var(--text-mid);
+    border:1px solid var(--line-700); font-size:13.5px; font-weight:700; padding:13px; border-radius:var(--radius-md);
+  }
+  .btn-ghost:hover{border-color:var(--red-400); color:var(--red-400);}
+
+  .med-form-card{ background:var(--navy-950); border:1px solid var(--line-700); border-radius:16px; padding:16px; }
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:11px;}
+  .form-grid .field.full{grid-column:1/-1;}
+  .form-actions{display:flex; gap:10px;}
+  .form-actions .btn-primary, .form-actions .btn-ghost{margin-top:15px; flex:1;}
+
+  .inv-list{display:flex; flex-direction:column; gap:10px;}
+  .inv-card{ background:var(--card-800); border:1px solid var(--line-700); border-radius:var(--radius-md); padding:13px; display:flex; flex-direction:column; gap:11px; }
+  .inv-card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .inv-name{font-size:13.5px; font-weight:700;}
+  .inv-meta{font-size:11.5px; color:var(--text-low); margin-top:2px;}
+  .inv-price{color:var(--gold-400); font-weight:700;}
+  .inv-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .inv-btn{
+    font-size:12px; font-weight:700; padding:8px 12px; border-radius:var(--radius-pill);
+    border:1px solid var(--line-700); background:var(--navy-950); color:var(--text-mid);
+  }
+  .inv-btn:hover{border-color:var(--emerald-500); color:var(--text-hi);}
+  .inv-btn.danger:hover{border-color:var(--red-400); color:var(--red-400);}
+  .quick-select{
+    font-size:12px; font-weight:700; padding:8px 10px; border-radius:var(--radius-pill);
+    border:1px solid var(--line-700); background:var(--navy-950); color:var(--text-mid); outline:none;
+  }
+  .inv-empty{ text-align:center; padding:30px 16px; color:var(--text-low); font-size:12.5px; border:1px dashed var(--line-700); border-radius:var(--radius-md); }
+
+  /* ---- trust banner ---- */
+  .trust-banner{
+    display:flex; align-items:flex-start; gap:12px;
+    background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.35);
+    border-radius:var(--radius-md); padding:14px 16px;
+  }
+  .trust-banner svg{width:22px; height:22px; color:var(--gold-400); flex-shrink:0; margin-top:1px;}
+  .trust-banner p{font-size:13px; color:var(--text-mid); line-height:1.65;}
+
+  /* ---- upload field ---- */
+  .upload-field{
+    display:flex; align-items:center; gap:10px; cursor:pointer;
+    background:var(--card-800); border:1.5px dashed var(--line-700);
+    border-radius:var(--radius-sm); padding:14px 12px; color:var(--text-mid); font-size:13px;
+    transition:border-color .16s ease, color .16s ease;
+  }
+  .upload-field:hover{border-color:var(--emerald-500); color:var(--text-hi);}
+  .upload-field svg{width:18px; height:18px; color:var(--emerald-400); flex-shrink:0;}
+
+  /* ---- pending review screen ---- */
+  .pending-card{
+    text-align:center; background:var(--navy-950); border:1px solid var(--line-700);
+    border-radius:16px; padding:30px 20px;
+  }
+  .pending-icon{
+    width:52px; height:52px; border-radius:50%; margin:0 auto 16px;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(245,158,11,.14); color:var(--gold-400);
+  }
+  .pending-icon svg{width:26px; height:26px;}
+  .pending-card h3{font-size:16px; font-weight:800;}
+  .pending-ref{font-size:12px; color:var(--text-low); margin-top:6px; font-family:monospace;}
+  .status-badge{
+    display:inline-flex; align-items:center; gap:6px; margin-top:12px;
+    font-size:11.5px; font-weight:700; padding:6px 14px; border-radius:var(--radius-pill);
+  }
+  .status-badge.pending{background:rgba(245,158,11,.14); color:var(--gold-400);}
+  .status-badge.pending::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--gold-400);}
+  .pending-summary{
+    text-align:start; background:var(--card-800); border:1px solid var(--line-700);
+    border-radius:var(--radius-md); padding:14px 16px; margin-top:20px; font-size:13px;
+    color:var(--text-mid); display:flex; flex-direction:column; gap:8px;
+  }
+  .pending-summary .row{display:flex; justify-content:space-between; gap:10px;}
+  .pending-summary .row b{color:var(--text-hi); font-weight:700;}
+  .pending-note{font-size:12.5px; color:var(--text-low); margin-top:16px; line-height:1.7; max-width:42ch; margin-inline:auto;}
+
+  /* ---- demo mode banner ---- */
+  .demo-banner{
+    display:flex; align-items:flex-start; gap:12px;
+    background:rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.35);
+    border-radius:var(--radius-md); padding:13px 16px;
+  }
+  .demo-banner svg{width:20px; height:20px; color:var(--emerald-400); flex-shrink:0; margin-top:1px;}
+  .demo-banner p{font-size:12.5px; color:var(--text-mid); line-height:1.6;}
+
+  /* ============ FEATURES GRID ============ */
+  .features-section{padding:20px 0 70px;}
+  .features-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:36px;
+  }
+  @media (max-width:860px){ .features-grid{grid-template-columns:1fr; max-width:440px; margin-inline:auto;} }
+  .feature-card{
+    background:var(--card-800); border:1px solid var(--line-700); border-radius:var(--radius-lg);
+    padding:26px 22px; transition:border-color .2s ease, transform .2s ease;
+  }
+  .feature-card:hover{border-color:var(--emerald-500); transform:translateY(-3px);}
+  .feature-icon{
+    width:52px; height:52px; border-radius:15px; display:flex; align-items:center; justify-content:center;
+    background:rgba(16,185,129,.12); margin-bottom:18px;
+  }
+  .feature-card:nth-child(2) .feature-icon{background:rgba(245,158,11,.14);}
+  .feature-icon svg{width:26px; height:26px; color:var(--emerald-400);}
+  .feature-card:nth-child(2) .feature-icon svg{color:var(--gold-400);}
+  .feature-card h3{font-size:16.5px; font-weight:700; margin-bottom:8px; letter-spacing:-.01em;}
+  .feature-card p{font-size:13.5px; color:var(--text-mid); line-height:1.7;}
+
+  /* ============ FOOTER ============ */
+  .site-footer{ border-top:1px solid var(--line-700); padding:44px 0 36px; }
+  .footer-inner{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:14px; }
+  .footer-brand{
+    font-size:22px; font-weight:800; letter-spacing:-.02em;
+    color:var(--emerald-500);
+    text-shadow:0 0 18px rgba(16,185,129,.55), 0 0 40px rgba(16,185,129,.25);
+  }
+  .footer-trust{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center;
+    font-size:12.5px; font-weight:600; color:var(--text-mid);
+  }
+  .footer-trust-icon{width:16px; height:16px; color:var(--emerald-400); flex-shrink:0;}
+  .footer-links{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .footer-links a{
+    font-size:12.5px; color:var(--text-mid); font-weight:600; transition:color .16s ease;
+  }
+  .footer-links a:hover{color:var(--emerald-400);}
+  .footer-sep{color:var(--line-700); font-size:12px;}
+  .footer-copyright{ font-size:12px; color:#64748b; margin-top:6px; }
+
+  /* ============ RTL micro-fixes ============ */
+  html[dir="rtl"] .pcard-top{flex-direction:row-reverse;}
+  html[dir="rtl"] .med-row{flex-direction:row-reverse;}
+  html[dir="rtl"] .pcard-meta{flex-direction:row-reverse; justify-content:flex-end;}
+  html[dir="rtl"] .distance-badge{flex-direction:row-reverse;}
+  html[dir="rtl"] .stock-tag{flex-direction:row-reverse;}
+  html[dir="rtl"] .action-btn{flex-direction:row-reverse;}
+  html[dir="rtl"] .mini-label{flex-direction:row-reverse;}
+  html[dir="rtl"] .brand{flex-direction:row-reverse;}
+  html[dir="rtl"] .app-tab{flex-direction:row-reverse;}
+  html[dir="rtl"] .info-card-top{flex-direction:row-reverse;}
+  html[dir="rtl"] .inv-card-top{flex-direction:row-reverse;}
+  html[dir="rtl"] .btn-portal{flex-direction:row-reverse;}
+  html[dir="rtl"] .btn-hero{flex-direction:row-reverse;}
+  html[dir="rtl"] .footer-trust{flex-direction:row-reverse;}
+
+  @media (max-width:380px){ .form-grid{grid-template-columns:1fr;} }
+
+  /* ---- geolocation: GPS button sitting beside the search box ---- */
+  .search-row{ display:flex; gap:9px; align-items:stretch; }
+  .search-row .search-shell{ flex:1 1 auto; min-width:0; }
+  .detect-btn{
+    flex:0 0 auto; display:flex; align-items:center; justify-content:center; gap:7px;
+    background:linear-gradient(135deg, var(--emerald-400), var(--emerald-500));
+    border:none; color:#04150f; font-size:13.5px; font-weight:800;
+    padding:0 16px; border-radius:var(--radius-md); white-space:nowrap;
+    box-shadow:0 10px 22px -10px rgba(16,185,129,.55);
+    transition:transform .14s ease, box-shadow .14s ease, opacity .14s ease;
+  }
+  .detect-btn svg{width:18px; height:18px; flex-shrink:0;}
+  @media (max-width:420px){ .detect-btn .detect-label{ display:none; } .detect-btn{ padding:0 14px; } }
+  .detect-btn:hover{transform:translateY(-1px); box-shadow:0 16px 32px -10px rgba(16,185,129,.6);}
+  .detect-btn:active{transform:scale(.98);}
+  .detect-btn.loading{opacity:.75; pointer-events:none;}
+  .locate-status{
+    font-size:12px; color:var(--text-low); text-align:center; margin-top:8px; min-height:16px;
+  }
+  .locate-status.error{color:var(--red-400);}
+  .locate-status.success{color:var(--emerald-400);}
+
+  /* ---- pharmacy card action buttons: conditional contact/share row ---- */
+  .pcard-actions.cols-2{ grid-template-columns:1fr 1fr; }
+  .pcard-actions.cols-3{ grid-template-columns:1fr 1fr 1fr; }
+  @media (max-width:380px){ .pcard-actions.cols-3{ grid-template-columns:1fr 1fr; } }
+  .action-btn.whatsapp{ background:#25D366; color:#04150f; border-color:#25D366; }
+  .action-btn.whatsapp:hover{ background:#2fe379; }
+  .action-btn.share{ background:transparent; color:var(--text-hi); }
+  .action-btn.share:hover{ border-color:var(--gold-500); color:var(--gold-400); }
+
+  /* ============ SHIFA AI — floating pharmacist assistant ============ */
+  .shifa-fab{
+    position:fixed; inset-inline-end:20px; bottom:20px; z-index:60;
+    display:flex; align-items:center; gap:9px;
+    background:linear-gradient(135deg, var(--emerald-400), var(--emerald-500));
+    color:#04150f; border:none; padding:14px 18px; border-radius:var(--radius-pill);
+    font-size:14px; font-weight:800; box-shadow:0 14px 30px -10px rgba(16,185,129,.6);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .shifa-fab svg{width:20px; height:20px; flex-shrink:0;}
+  .shifa-fab:hover{ transform:translateY(-2px); box-shadow:0 18px 36px -10px rgba(16,185,129,.65); }
+  .shifa-fab.hidden{ display:none; }
+
+  .shifa-panel{
+    position:fixed; inset-inline-end:20px; bottom:20px; z-index:70;
+    width:min(380px, calc(100vw - 32px)); height:min(600px, calc(100vh - 40px));
+    background:var(--navy-950); border:1px solid var(--line-700); border-radius:20px;
+    box-shadow:0 30px 70px -20px rgba(0,0,0,.7);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .shifa-panel.hidden{ display:none; }
+
+  .shifa-header{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:14px 16px; border-bottom:1px solid var(--line-700); background:var(--card-800);
+    flex-shrink:0;
+  }
+  .shifa-header-title{ display:flex; align-items:center; gap:10px; }
+  .shifa-avatar{
+    width:34px; height:34px; border-radius:10px; flex-shrink:0;
+    background:linear-gradient(150deg, var(--emerald-400), #059669);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .shifa-avatar svg{ width:18px; height:18px; color:#04150f; }
+  .shifa-header-title b{ font-size:14.5px; font-weight:800; display:block; }
+  .shifa-header-title span{ font-size:11px; color:var(--emerald-400); }
+  .shifa-close{
+    background:transparent; border:none; color:var(--text-low); cursor:pointer;
+    width:28px; height:28px; display:flex; align-items:center; justify-content:center;
+    border-radius:8px; transition:background .15s ease, color .15s ease;
+  }
+  .shifa-close:hover{ background:var(--line-700); color:var(--text-hi); }
+  .shifa-close svg{ width:16px; height:16px; }
+
+  .shifa-messages{ flex:1 1 auto; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .shifa-msg{ max-width:85%; padding:10px 13px; border-radius:14px; font-size:13.5px; line-height:1.7; white-space:pre-wrap; }
+  .shifa-msg.user{ align-self:flex-end; background:var(--emerald-500); color:#04150f; border-bottom-right-radius:4px; }
+  html[dir="rtl"] .shifa-msg.user{ border-bottom-right-radius:14px; border-bottom-left-radius:4px; }
+  .shifa-msg.model{ align-self:flex-start; background:var(--card-800); border:1px solid var(--line-700); color:var(--text-hi); border-bottom-left-radius:4px; }
+  html[dir="rtl"] .shifa-msg.model{ align-self:flex-end; border-bottom-left-radius:14px; border-bottom-right-radius:4px; }
+  html[dir="rtl"] .shifa-msg.user{ align-self:flex-start; }
+  .shifa-msg.error{ background:rgba(248,113,113,.1); border-color:rgba(248,113,113,.35); color:var(--red-400); }
+  .shifa-msg.typing{ color:var(--text-low); font-style:italic; }
+
+  .shifa-input-row{
+    display:flex; gap:8px; padding:12px; border-top:1px solid var(--line-700);
+    background:var(--card-800); flex-shrink:0;
+  }
+  .shifa-input{
+    flex:1 1 auto; background:var(--navy-950); border:1px solid var(--line-700);
+    color:var(--text-hi); border-radius:var(--radius-pill); padding:11px 16px; font-size:13.5px; outline:none;
+  }
+  .shifa-input:focus{ border-color:var(--emerald-500); box-shadow:0 0 0 3px var(--emerald-glow); }
+  .shifa-send{
+    flex-shrink:0; width:40px; height:40px; border-radius:50%; border:none;
+    background:var(--emerald-500); color:#04150f; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:background .15s ease, opacity .15s ease;
+  }
+  .shifa-send:hover{ background:var(--emerald-400); }
+  .shifa-send:disabled{ opacity:.5; cursor:default; }
+  .shifa-send svg{ width:17px; height:17px; }
+  html[dir="rtl"] .shifa-send svg{ transform:scaleX(-1); }
+
+  @media (max-width:420px){
+    .shifa-panel{ inset-inline-end:12px; bottom:12px; width:calc(100vw - 24px); }
+    .shifa-fab{ inset-inline-end:12px; bottom:12px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="4" width="4" height="16" rx="1.5" fill="#ffffff"/>
+          <rect x="4" y="10" width="16" height="4" rx="1.5" fill="#ffffff"/>
+        </svg>
+      </div>
+      <div class="brand-name">Pharma<span>Near</span></div>
+    </div>
+    <div class="header-actions">
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button type="button" id="btn-ar" class="active" onclick="setLang('ar')">عربي</button>
+        <button type="button" id="btn-en" onclick="setLang('en')">EN</button>
+      </div>
+      <button type="button" class="btn-portal" onclick="goToApp('pharmacist')">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span data-ar-only>دخول الصيدلي</span><span data-en-only>Pharmacist Portal</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <svg class="pulse-line" viewBox="0 0 1200 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 60 L280 60 L310 20 L340 100 L370 40 L400 60 L1200 60" stroke="#10b981" stroke-width="2" fill="none"/>
+  </svg>
+  <div class="hero-inner">
+    <h1 data-ar-only>بوابتك الذكية للوصول إلى الدواء</h1>
+    <h1 data-en-only>Your smart gateway to medicine access</h1>
+    <p class="sub" data-ar-only>ابحث عن دوائك، اعثر على أقرب صيدلية متوفر فيها الدواء، أو تواصل مباشرة مع الصيدلي في ثوانٍ.</p>
+    <p class="sub" data-en-only>Search for your medicine, find the nearest pharmacy that has it in stock, or contact the pharmacist directly — in seconds.</p>
+
+    <div class="hero-ctas">
+      <button type="button" class="btn-hero gold" onclick="goToApp('customer')">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2.2"/>
+          <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+        <span data-ar-only>ابحث عن دواء الآن</span>
+        <span data-en-only>Search for medicine now</span>
+      </button>
+      <button type="button" class="btn-hero outline" onclick="goToApp('pharmacist')">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2.2"/>
+          <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+        <span data-ar-only>تسجيل دخول / إضافة صيدلية</span>
+        <span data-en-only>Pharmacist login / Add pharmacy</span>
+      </button>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat"><b>+120</b><span data-ar-only>صيدلية مسجلة</span><span data-en-only>registered pharmacies</span></div>
+      <div class="hero-stat"><b>+4,000</b><span data-ar-only>عملية بحث يومياً</span><span data-en-only>searches per day</span></div>
+      <div class="hero-stat"><b>&lt;10s</b><span data-ar-only>متوسط وقت الاتصال</span><span data-en-only>avg. time to contact</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="app-section" id="app">
+  <div class="shell">
+    <div class="section-head">
+      <span class="section-kicker" data-ar-only>التطبيق التفاعلي</span>
+      <span class="section-kicker" data-en-only>Interactive app</span>
+      <h2 data-ar-only>جرّب PharmaNear الآن</h2>
+      <h2 data-en-only>Try PharmaNear right now</h2>
+      <p data-ar-only>بدّل بين واجهة العميل وبوابة الصيدلي دون إعادة تحميل الصفحة.</p>
+      <p data-en-only>Switch between the customer view and the pharmacist portal — no page reloads.</p>
+    </div>
+
+    <div class="app-frame">
+      <div class="app-tabs" role="tablist">
+        <button class="app-tab active" id="tab-customer" role="tab" aria-selected="true" onclick="switchApp('customer')">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+            <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span data-ar-only>ابحث عن دواء</span><span data-en-only>Find medicine</span>
+        </button>
+        <button class="app-tab" id="tab-pharmacist" role="tab" aria-selected="false" onclick="switchApp('pharmacist')">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span data-ar-only>بوابة الصيدلي</span><span data-en-only>Pharmacist portal</span>
+        </button>
+      </div>
+
+      <div class="app-body">
+
+        <!-- ============ CUSTOMER PANEL ============ -->
+        <div class="app-panel" id="panel-customer">
+
+          <div class="search-row">
+            <div class="search-shell">
+              <svg class="icon-search" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+                <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <input id="search-input" class="search-input" type="text" autocomplete="off"
+                data-ar-placeholder="ابحث عن دواء، مثال: بنادول، أموكسيسيلين..."
+                data-en-placeholder="Search medicine, e.g. Panadol, Amoxicillin..."
+                oninput="renderPharmacies()">
+            </div>
+            <button type="button" class="detect-btn" id="detect-btn" onclick="captureLocation()" title="تحديد موقعي الحالي">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 21s-7-6.1-7-11.5A7 7 0 0119 9.5C19 14.9 12 21 12 21z" stroke="currentColor" stroke-width="2.2"/>
+                <circle cx="12" cy="9.5" r="2.3" stroke="currentColor" stroke-width="2.2"/>
+              </svg>
+              <span class="detect-label" data-ar-only>موقعي 📍</span>
+              <span class="detect-label" data-en-only>My location 📍</span>
+            </button>
+          </div>
+          <div class="locate-status" id="locate-status"></div>
+
+          <div class="filter-row" id="filter-row">
+            <button class="chip active" data-filter="all" onclick="setFilter('all', this)">
+              <span data-ar-only>كل الصيدليات</span><span data-en-only>All pharmacies</span>
+            </button>
+            <button class="chip" data-filter="open" onclick="setFilter('open', this)">
+              <span data-ar-only>مفتوحة الآن</span><span data-en-only>Open now</span>
+            </button>
+            <button class="chip" data-filter="instock" onclick="setFilter('instock', this)">
+              <span data-ar-only>متوفر فقط</span><span data-en-only>In stock only</span>
+            </button>
+            <button class="chip" data-filter="nearest" onclick="setFilter('nearest', this)">
+              <span data-ar-only>الأقرب أولاً</span><span data-en-only>Nearest first</span>
+            </button>
+          </div>
+
+          <div class="mini-label">
+            <h3 data-ar-only>صيدليات بالقرب منك</h3>
+            <h3 data-en-only>Pharmacies near you</h3>
+            <span class="count" id="result-count"></span>
+          </div>
+
+          <div class="card-list" id="card-list"></div>
+
+          <div class="empty-state" id="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            <h4 data-ar-only>لا توجد صيدليات مطابقة</h4>
+            <h4 data-en-only>No matching pharmacies</h4>
+            <p data-ar-only>جرّب اسم دواء آخر أو أزل عوامل التصفية.</p>
+            <p data-en-only>Try a different medicine name or clear your filters.</p>
+          </div>
+        </div>
+
+        <!-- ============ PHARMACIST PANEL ============ -->
+        <div class="app-panel" id="panel-pharmacist" hidden>
+
+          <!-- ---- STAGE 1: VERIFICATION GATE ---- -->
+          <div id="pharmacist-gate">
+
+            <div class="trust-banner">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 3l7 3v5c0 5-3.2 8.5-7 10-3.8-1.5-7-5-7-10V6l7-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                <path d="M9.5 12l1.8 1.8L15 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <p data-ar-only>جميع الطلبات تخضع للمراجعة والتحقق من التراخيص الطبية قبل منح صلاحية الوصول.</p>
+              <p data-en-only>All applications are subject to review and medical-license verification before access is granted.</p>
+            </div>
+
+            <div class="mini-label" style="margin-top:22px;">
+              <h3 data-ar-only>طلب انضمام صيدلية معتمدة</h3>
+              <h3 data-en-only>Verified pharmacy application</h3>
+            </div>
+
+            <form class="med-form-card" id="verify-form" onsubmit="submitVerification(event)">
+              <div class="form-grid">
+                <div class="field full">
+                  <label data-ar-only>اسم الصيدلية</label><label data-en-only>Pharmacy name</label>
+                  <input id="v-name" required placeholder="e.g. صيدلية النور">
+                </div>
+                <div class="field">
+                  <label data-ar-only>رقم الترخيص / التصريح</label><label data-en-only>License / permit number</label>
+                  <input id="v-license" required placeholder="e.g. SD-PHM-04821">
+                </div>
+                <div class="field">
+                  <label data-ar-only>المنطقة / المدينة</label><label data-en-only>District / city</label>
+                  <input id="v-city" required placeholder="e.g. الخرطوم">
+                </div>
+                <div class="field full">
+                  <label data-ar-only>رقم هاتف المدير المسؤول</label><label data-en-only>Manager phone number</label>
+                  <input id="v-phone" type="tel" required placeholder="+249 9XX XXX XXX">
+                </div>
+                <div class="field full">
+                  <label data-ar-only>صورة الترخيص (PDF / JPG)</label><label data-en-only>License document (PDF / JPG)</label>
+                  <label class="upload-field" for="v-doc">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                    <span id="upload-label" data-ar-only>اضغط لرفع صورة الترخيص</span>
+                    <span id="upload-label-en" data-en-only>Click to upload your license</span>
+                    <input id="v-doc" type="file" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocSelect(this)" hidden>
+                  </label>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                  <span data-ar-only>إرسال طلب الانضمام</span><span data-en-only>Submit application</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- ---- STAGE 2: PENDING REVIEW ---- -->
+          <div id="pharmacist-pending" hidden>
+            <div class="pending-card">
+              <div class="pending-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M12 7v5l3.2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <h3 data-ar-only>تم استلام طلبك بنجاح</h3>
+              <h3 data-en-only>Your application has been received</h3>
+              <p class="pending-ref" id="pending-ref"></p>
+              <span class="status-badge pending" data-ar-only>قيد المراجعة</span>
+              <span class="status-badge pending" data-en-only>Under review</span>
+
+              <div class="pending-summary" id="pending-summary"></div>
+
+              <p class="pending-note" data-ar-only>سيتم التواصل معك خلال 24–48 ساعة عمل بعد التحقق من الترخيص الطبي لدى الجهات المختصة.</p>
+              <p class="pending-note" data-en-only>We'll contact you within 24–48 business hours once your medical license has been verified with the relevant authorities.</p>
+
+              <div class="form-actions">
+                <button type="button" class="btn-primary" onclick="previewDashboard()">
+                  <span data-ar-only>معاينة لوحة التحكم (وضع تجريبي)</span><span data-en-only>Preview dashboard (demo mode)</span>
+                </button>
+                <button type="button" class="btn-ghost" onclick="editApplication()">
+                  <span data-ar-only>تعديل الطلب</span><span data-en-only>Edit application</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---- STAGE 3: DASHBOARD (DEMO PREVIEW) ---- -->
+          <div id="pharmacist-dashboard" hidden>
+
+            <div class="demo-banner">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 9v4M12 16.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+              <p data-ar-only>أنت في وضع المعاينة التجريبية — لن تُفعَّل هذه البيانات فعلياً حتى تتم الموافقة على طلبك.</p>
+              <p data-en-only>You're in demo preview mode — this data won't go live until your application is approved.</p>
+            </div>
+
+            <div class="mini-label" style="margin-top:18px;">
+              <h3 data-ar-only>بيانات الصيدلية</h3>
+              <h3 data-en-only>Pharmacy info</h3>
+            </div>
+            <div class="info-card">
+              <div class="info-card-top">
+                <div style="flex:1;">
+                  <input id="pharm-name" class="ghost-input" value="صيدلية النور" aria-label="Pharmacy name">
+                  <div class="status-caption is-open" id="open-status-caption" data-ar-only>مفتوحة الآن</div>
+                  <div class="status-caption is-open" id="open-status-caption-en" data-en-only>Open now</div>
+                </div>
+                <label class="toggle-switch" aria-label="Open or closed">
+                  <input type="checkbox" id="pharm-open-toggle" checked onchange="toggleOpenStatus()">
+                  <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </label>
+              </div>
+              <div class="info-fields">
+                <div class="field">
+                  <label data-ar-only>العنوان</label><label data-en-only>Address</label>
+                  <input id="pharm-address" type="text" value="شارع الرياض، الخرطوم">
+                </div>
+                <div class="field">
+                  <label data-ar-only>رقم التواصل</label><label data-en-only>Contact number</label>
+                  <input id="pharm-phone" type="tel" value="+249912345001">
+                </div>
+                <div class="field">
+                  <label data-ar-only>ساعات العمل</label><label data-en-only>Working hours</label>
+                  <input id="pharm-hours" type="text" value="8:00 ص – 11:00 م" placeholder="e.g. 8:00 AM – 11:00 PM">
+                </div>
+              </div>
+              <button class="btn-primary" onclick="savePharmacyInfo(event)">
+                <span data-ar-only>حفظ التغييرات</span><span data-en-only>Save changes</span>
+              </button>
+            </div>
+
+            <div class="mini-label">
+              <h3 id="form-heading-ar" data-ar-only>إضافة دواء</h3>
+              <h3 id="form-heading" data-en-only>Add medicine</h3>
+            </div>
+            <form class="med-form-card" id="med-form" onsubmit="handleMedSubmit(event)">
+              <div class="form-grid">
+                <div class="field full">
+                  <label data-ar-only>اسم الدواء</label><label data-en-only>Medicine name</label>
+                  <input id="f-name" required placeholder="e.g. Panadol Extra">
+                </div>
+                <div class="field">
+                  <label data-ar-only>الجرعة / الشكل</label><label data-en-only>Dosage / form</label>
+                  <input id="f-form" required placeholder="e.g. 500mg, 24 tablets">
+                </div>
+                <div class="field">
+                  <label data-ar-only>السعر (جنيه)</label><label data-en-only>Price (SDG)</label>
+                  <input id="f-price" type="number" min="0" step="1" required placeholder="e.g. 3500">
+                </div>
+                <div class="field full">
+                  <label data-ar-only>حالة التوفر</label><label data-en-only>Stock status</label>
+                  <select id="f-status">
+                    <option value="in" data-ar-only>متوفر</option><option value="in" data-en-only>In stock</option>
+                    <option value="low" data-ar-only>كمية محدودة</option><option value="low" data-en-only>Low stock</option>
+                    <option value="out" data-ar-only>غير متوفر</option><option value="out" data-en-only>Out of stock</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary" id="form-submit-btn">
+                  <span data-ar-only>إضافة الدواء</span><span data-en-only>Add medicine</span>
+                </button>
+                <button type="button" class="btn-ghost" id="form-cancel-btn" onclick="cancelEdit()" hidden>
+                  <span data-ar-only>إلغاء</span><span data-en-only>Cancel</span>
+                </button>
+              </div>
+            </form>
+
+            <div class="mini-label">
+              <h3 data-ar-only>مخزونك الحالي</h3>
+              <h3 data-en-only>Your inventory</h3>
+              <span class="count" id="inv-count"></span>
+            </div>
+            <div class="inv-list" id="inv-list"></div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features-section">
+  <div class="shell">
+    <div class="section-head">
+      <span class="section-kicker" data-ar-only>مميزات المنصة</span>
+      <span class="section-kicker" data-en-only>Platform features</span>
+      <h2 data-ar-only>كل ما تحتاجه للوصول إلى دوائك</h2>
+      <h2 data-en-only>Everything you need to reach your medicine</h2>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 21s-7-6.1-7-11.5A7 7 0 0119 9.5C19 14.9 12 21 12 21z" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <h3 data-ar-only>الخريطة التفاعلية والـ GPS</h3>
+        <h3 data-en-only>Interactive map &amp; GPS</h3>
+        <p data-ar-only>تحديد أقرب الصيدليات بدقة باستخدام موقعك الحالي، مع مسافة تقديرية لكل صيدلية.</p>
+        <p data-en-only>Pinpoint the nearest pharmacies accurately using your live location, with an estimated distance for each.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 12a8 8 0 0113.66-5.66M20 12a8 8 0 01-13.66 5.66" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M18 3v4h-4M6 21v-4h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3 data-ar-only>التحديث الفوري للمخزون</h3>
+        <h3 data-en-only>Real-time stock updates</h3>
+        <p data-ar-only>اعرف توفر الدواء لحظة بلحظة، مباشرة من لوحة تحكم الصيدلية.</p>
+        <p data-en-only>Know medicine availability instantly, updated directly from the pharmacy's dashboard.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3 data-ar-only>الطلب والتواصل المباشر</h3>
+        <h3 data-en-only>Direct contact &amp; ordering</h3>
+        <p data-ar-only>اتصال سريع بالصيدلية وفتح موقعها مباشرة على خرائط غوغل بضغطة واحدة.</p>
+        <p data-en-only>Call the pharmacy instantly or open its location on Google Maps with a single tap.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="shell footer-inner">
+    <div class="footer-brand">PharmaNear</div>
+
+    <div class="footer-trust">
+      <svg class="footer-trust-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 3l7 3v5c0 5-3.2 8.5-7 10-3.8-1.5-7-5-7-10V6l7-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M9.5 12l1.8 1.8L15 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span data-ar-only>المنصة الموثوقة للبحث الدوائي</span>
+      <span data-en-only>The trusted medicine search platform</span>
+    </div>
+
+    <nav class="footer-links">
+      <a href="#" data-ar-only>الشروط والأحكام</a><a href="#" data-en-only>Terms &amp; Conditions</a>
+      <span class="footer-sep">|</span>
+      <a href="#" data-ar-only>سياسة الخصوصية</a><a href="#" data-en-only>Privacy Policy</a>
+      <span class="footer-sep">|</span>
+      <a href="#" data-ar-only>الدعم الفني</a><a href="#" data-en-only>Technical Support</a>
+    </nav>
+
+    <p class="footer-copyright">
+      <span data-ar-only>© 2026 PharmaNear. جميع الحقوق محفوظة.</span>
+      <span data-en-only>© 2026 PharmaNear. All rights reserved.</span>
+    </p>
+  </div>
+</footer>
+
+<!-- ============ SHIFA AI — floating pharmacist assistant ============ -->
+<button type="button" class="shifa-fab" id="shifa-fab" onclick="openShifaChat()">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 3l7 3v5c0 5-3.2 8.5-7 10-3.8-1.5-7-5-7-10V6l7-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M9.5 12l1.8 1.8L15 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span data-ar-only>شفاء AI</span><span data-en-only>Shifa AI</span>
+</button>
+
+<div class="shifa-panel hidden" id="shifa-panel" role="dialog" aria-label="Shifa AI">
+  <div class="shifa-header">
+    <div class="shifa-header-title">
+      <div class="shifa-avatar">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 3l7 3v5c0 5-3.2 8.5-7 10-3.8-1.5-7-5-7-10V6l7-3z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div>
+        <b data-ar-only>شفاء AI</b><b data-en-only>Shifa AI</b>
+        <span data-ar-only>مساعدك الصيدلي الذكي</span><span data-en-only>Your smart pharmacist assistant</span>
+      </div>
+    </div>
+    <button type="button" class="shifa-close" onclick="closeShifaChat()" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="shifa-messages" id="shifa-messages"></div>
+
+  <form class="shifa-input-row" id="shifa-form" onsubmit="handleShifaSubmit(event)">
+    <input
+      id="shifa-input"
+      class="shifa-input"
+      type="text"
+      autocomplete="off"
+      data-ar-placeholder="اسأل عن دواء، جرعة، تداخل دوائي..."
+      data-en-placeholder="Ask about a medicine, dosage, drug interaction..."
+      placeholder="اسأل عن دواء، جرعة، تداخل دوائي...">
+    <button type="submit" class="shifa-send" id="shifa-send" aria-label="Send">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 12l16-7-6 16-2.5-6.5L4 12z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </form>
+</div>
+
+<script>
+/* ==========================================================================
+   PharmaNear — frontend logic
+   Talks to the Flask backend at /api/... (see app.py). No page reloads —
+   everything below is fetch() + DOM updates.
+   ========================================================================== */
+
+let currentLang = 'ar';
+let currentFilter = 'all';
+let currentAppView = 'customer';
+let editingMedicineId = null;
+let pharmacistStage = 'gate';
+let myPharmacyId = null;
+let myPharmacy = null;
+let userCoords = null; // { lat, lng } once captured
+let searchDebounceTimer = null;
+let lastResults = []; // the most recently rendered pharmacy list, indexed for onclick handlers
+
+/* ============================================================
+   الصيدليات المسجّلة — تظهر فوراً عند فتح الصفحة.
+   عند الضغط على زر "موقعي 📍" يتم استبدالها بالصيدليات الحقيقية
+   القريبة من موقع الزائر عبر /api/pharmacies.
+   ============================================================ */
+const DEFAULT_PHARMACIES = [
+  {
+    name: { en: 'Al-Fayha Pharmacy', ar: 'صيدلية الفيحاء' },
+    address: { en: 'Al-Fayha, East Nile', ar: 'الفيحاء، شرق النيل' },
+    latitude: 15.6120, longitude: 32.6180, distance_km: null,
+    is_open: true, phone: '+249911000006', hours: '8:00 ص – 11:00 م',
+    medicines: [
+      { name: { en: 'Panadol Extra', ar: 'بنادول إكسترا' }, form: { en: '24 tablets', ar: '24 قرص' }, price: 3500, availability: 'in_stock' },
+      { name: { en: 'Augmentin 625mg', ar: 'أوجمنتين 625' }, form: { en: 'Tablets', ar: 'أقراص' }, price: 7200, availability: 'in_stock' },
+      { name: { en: 'Ventolin Inhaler', ar: 'فينتولين بخاخ' }, form: { en: 'Inhaler 100mcg', ar: 'بخاخ 100 مكغ' }, price: 6800, availability: 'low_stock' },
+    ],
+  },
+  {
+    name: { en: "Tas'heel Pharmacy", ar: 'صيدلية تساهيل' },
+    address: { en: 'Al-Riyadh, Khartoum', ar: 'الرياض، الخرطوم' },
+    latitude: 15.583, longitude: 32.538, distance_km: null,
+    is_open: true, phone: '+249911000001', hours: '8:00 ص – 11:00 م',
+    medicines: [
+      { name: { en: 'Panadol Extra', ar: 'بنادول إكسترا' }, form: { en: '24 tablets', ar: '24 قرص' }, price: 3500, availability: 'in_stock' },
+      { name: { en: 'Amoxicillin 500mg', ar: 'أموكسيسيلين 500' }, form: { en: 'Capsules', ar: 'كبسولات' }, price: 5100, availability: 'low_stock' },
+      { name: { en: 'Vitamin C 1000mg', ar: 'فيتامين سي 1000' }, form: { en: 'Effervescent tablets', ar: 'أقراص فوارة' }, price: 2200, availability: 'in_stock' },
+    ],
+  },
+  {
+    name: { en: 'Al-Mahmada Pharmacy', ar: 'صيدلية المحمدة' },
+    address: { en: 'Al-Mahmada, Omdurman', ar: 'المحمدة، أم درمان' },
+    latitude: 15.646, longitude: 32.478, distance_km: null,
+    is_open: true, phone: '+249911000002', hours: '9:00 ص – 12:00 ص',
+    medicines: [
+      { name: { en: 'Metformin 500mg', ar: 'ميتفورمين 500' }, form: { en: 'Tablets', ar: 'أقراص' }, price: 2800, availability: 'in_stock' },
+      { name: { en: 'Ventolin Inhaler', ar: 'فينتولين بخاخ' }, form: { en: 'Inhaler 100mcg', ar: 'بخاخ 100 مكغ' }, price: 6700, availability: 'in_stock' },
+      { name: { en: 'Insulin Glargine', ar: 'إنسولين غلارجين' }, form: { en: 'Injection pen', ar: 'قلم حقن' }, price: 18000, availability: 'out_of_stock' },
+    ],
+  },
+  {
+    name: { en: 'Ahl Al-Quran Pharmacy', ar: 'صيدلية أهل القرآن' },
+    address: { en: 'Bahri, Khartoum North', ar: 'بحري، الخرطوم بحري' },
+    latitude: 15.644, longitude: 32.533, distance_km: null,
+    is_open: false, phone: '+249911000003', hours: '8:00 ص – 10:00 م',
+    medicines: [
+      { name: { en: 'Panadol Extra', ar: 'بنادول إكسترا' }, form: { en: '24 tablets', ar: '24 قرص' }, price: 3400, availability: 'in_stock' },
+      { name: { en: 'Augmentin 625mg', ar: 'أوجمنتين 625' }, form: { en: 'Tablets', ar: 'أقراص' }, price: 7200, availability: 'low_stock' },
+    ],
+  },
+  {
+    name: { en: 'Al-Dawa Al-Shafi Pharmacy', ar: 'صيدلية الدواء الشافي' },
+    address: { en: 'Al-Amarat, Khartoum', ar: 'العمارات، الخرطوم' },
+    latitude: 15.574, longitude: 32.547, distance_km: null,
+    is_open: true, phone: '+249911000004', hours: '24 ساعة',
+    medicines: [
+      { name: { en: 'Amoxicillin 500mg', ar: 'أموكسيسيلين 500' }, form: { en: 'Capsules', ar: 'كبسولات' }, price: 4900, availability: 'in_stock' },
+      { name: { en: 'Paracetamol Syrup', ar: 'شراب باراسيتامول' }, form: { en: '120ml bottle', ar: 'زجاجة 120مل' }, price: 2100, availability: 'in_stock' },
+      { name: { en: 'Insulin Glargine', ar: 'إنسولين غلارجين' }, form: { en: 'Injection pen', ar: 'قلم حقن' }, price: 17500, availability: 'low_stock' },
+    ],
+  },
+  {
+    name: { en: 'Kobri Soba Pharmacy', ar: 'صيدلية كبري سوبا' },
+    address: { en: 'Soba, South Khartoum', ar: 'سوبا، جنوب الخرطوم' },
+    latitude: 15.528, longitude: 32.560, distance_km: null,
+    is_open: true, phone: '+249911000005', hours: '8:00 ص – 11:00 م',
+    medicines: [
+      { name: { en: 'Ventolin Inhaler', ar: 'فينتولين بخاخ' }, form: { en: 'Inhaler 100mcg', ar: 'بخاخ 100 مكغ' }, price: 6900, availability: 'low_stock' },
+      { name: { en: 'Metformin 500mg', ar: 'ميتفورمين 500' }, form: { en: 'Tablets', ar: 'أقراص' }, price: 2700, availability: 'out_of_stock' },
+      { name: { en: 'Panadol Extra', ar: 'بنادول إكسترا' }, form: { en: '24 tablets', ar: '24 قرص' }, price: 3300, availability: 'in_stock' },
+    ],
+  },
+];
+
+// The list currently on screen: the directory above, or live GPS results.
+let activePharmacies = DEFAULT_PHARMACIES;
+
+const statusLabel = {
+  in_stock:     { en: 'In stock',     ar: 'متوفر' },
+  low_stock:    { en: 'Low stock',    ar: 'كمية محدودة' },
+  out_of_stock: { en: 'Out of stock', ar: 'غير متوفر' },
+};
+
+/* ============ HELPERS ============ */
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
+}
+function medName(m, lang) { return m.name ? m.name[lang] : ''; }
+function medForm(m, lang) { return m.form ? m.form[lang] : ''; }
+function directionsUrl(ph) { return `https://www.google.com/maps/dir/?api=1&destination=${ph.latitude},${ph.longitude}`; }
+function telUrl(phone) { return `tel:${phone}`; }
+function whatsappUrl(phone, text) {
+  // wa.me wants digits only (country code + number, no "+", spaces, or dashes).
+  const digits = String(phone).replace(/[^\d]/g, '');
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}
+
+// Safely parses a fetch response as JSON. If the server (or a platform-level
+// error page, e.g. a 404 route mismatch) returns HTML instead of JSON, this
+// throws a clear, readable error instead of letting `.json()` crash with a
+// cryptic "Unexpected token '<'/'T' ... is not valid JSON" message.
+async function safeFetchJson(url, options) {
+  const res = await fetch(url, options);
+  const contentType = res.headers.get('content-type') || '';
+
+  if (!contentType.includes('application/json')) {
+    const bodyPreview = (await res.text()).slice(0, 120);
+    throw new Error(
+      currentLang === 'ar'
+        ? `الخادم أرجع استجابة غير متوقعة (HTTP ${res.status}) بدل JSON — تحقق من مسار الـ API.`
+        : `Server returned an unexpected response (HTTP ${res.status}) instead of JSON — check the API route.`
+    );
+  }
+
+  const data = await res.json();
+  if (!res.ok && !data) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+  return data;
+}
+
+async function apiGet(path) {
+  return safeFetchJson(path);
+}
+async function apiSend(path, method, body) {
+  return safeFetchJson(path, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+/* ============ GEOLOCATION (HTML5 API) ============ */
+function captureLocation() {
+  const btn = document.getElementById('detect-btn');
+  const status = document.getElementById('locate-status');
+
+  if (!navigator.geolocation) {
+    status.className = 'locate-status error';
+    status.textContent = currentLang === 'ar' ? 'الموقع غير مدعوم في هذا المتصفح' : 'Geolocation not supported';
+    return;
+  }
+
+  btn.classList.add('loading');
+  status.className = 'locate-status';
+  status.textContent = currentLang === 'ar' ? 'جارٍ تحديد موقعك بدقة GPS...' : 'Detecting your location with GPS accuracy...';
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      userCoords = { lat: lat, lng: lon };
+      btn.classList.remove('loading');
+      status.className = 'locate-status success';
+      status.textContent = currentLang === 'ar' ? 'تم تحديد موقعك ✓' : 'Location set ✓';
+      // Skip the typing-debounce here — an explicit "detect my location" click
+      // should refresh the results immediately, not after a delay.
+      clearTimeout(searchDebounceTimer);
+      fetchAndRender(lat, lon);
+    },
+    () => {
+      btn.classList.remove('loading');
+      status.className = 'locate-status error';
+      status.textContent = currentLang === 'ar'
+        ? 'تعذّر الوصول للموقع — تحقق من أذونات GPS في المتصفح'
+        : "Couldn't access your location — check your browser's GPS permissions";
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+/* ============ NAV HELPERS ============ */
+function goToApp(view) {
+  switchApp(view);
+  document.getElementById('app').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function switchApp(view) {
+  currentAppView = view;
+  document.getElementById('panel-customer').hidden = view !== 'customer';
+  document.getElementById('panel-pharmacist').hidden = view !== 'pharmacist';
+  document.getElementById('tab-customer').classList.toggle('active', view === 'customer');
+  document.getElementById('tab-pharmacist').classList.toggle('active', view === 'pharmacist');
+  document.getElementById('tab-customer').setAttribute('aria-selected', view === 'customer');
+  document.getElementById('tab-pharmacist').setAttribute('aria-selected', view === 'pharmacist');
+  if (view === 'pharmacist') showPharmacistStage(pharmacistStage);
+}
+
+/* ============ PHARMACIST VERIFICATION FLOW ============ */
+function showPharmacistStage(stage) {
+  pharmacistStage = stage;
+  document.getElementById('pharmacist-gate').hidden = stage !== 'gate';
+  document.getElementById('pharmacist-pending').hidden = stage !== 'pending';
+  document.getElementById('pharmacist-dashboard').hidden = stage !== 'dashboard';
+  if (stage === 'dashboard') renderPharmacistDashboard();
+}
+
+function handleDocSelect(input) {
+  const file = input.files && input.files[0];
+  const arLabel = document.getElementById('upload-label');
+  const enLabel = document.getElementById('upload-label-en');
+  if (file) { arLabel.textContent = file.name; enLabel.textContent = file.name; }
+  else {
+    arLabel.textContent = 'اضغط لرفع صورة الترخيص';
+    enLabel.textContent = 'Click to upload your license';
+  }
+}
+
+async function submitVerification(e) {
+  e.preventDefault();
+  const name = document.getElementById('v-name').value.trim();
+  const license = document.getElementById('v-license').value.trim();
+  const city = document.getElementById('v-city').value.trim();
+  const phone = document.getElementById('v-phone').value.trim();
+  if (!name || !license || !city || !phone) return;
+
+  const ref = 'PN-' + Math.floor(10000 + Math.random() * 89999);
+  document.getElementById('pending-ref').textContent = (currentLang === 'ar' ? 'رقم الطلب: ' : 'Application ID: ') + ref;
+
+  const lang = currentLang;
+  document.getElementById('pending-summary').innerHTML = `
+    <div class="row"><span>${lang === 'ar' ? 'اسم الصيدلية' : 'Pharmacy name'}</span><b>${escapeHtml(name)}</b></div>
+    <div class="row"><span>${lang === 'ar' ? 'رقم الترخيص' : 'License number'}</span><b>${escapeHtml(license)}</b></div>
+    <div class="row"><span>${lang === 'ar' ? 'المدينة' : 'City'}</span><b>${escapeHtml(city)}</b></div>
+    <div class="row"><span>${lang === 'ar' ? 'رقم الهاتف' : 'Phone'}</span><b>${escapeHtml(phone)}</b></div>
+  `;
+
+  // Register a real (but initially closed) pharmacy row in the database.
+  try {
+    const pharmacy = await apiSend('/api/pharmacies', 'POST', {
+      name_en: name, name_ar: name,
+      address_en: city, address_ar: city,
+      latitude: userCoords ? userCoords.lat : 15.6, // fall back to a Khartoum-area default
+      longitude: userCoords ? userCoords.lng : 32.53,
+      phone, status: 'closed', hours: '',
+    });
+    myPharmacyId = pharmacy.id;
+    myPharmacy = pharmacy;
+  } catch (err) {
+    // Quietly keep this as a local-only demo record if the API call didn't go through.
+    myPharmacyId = null;
+    myPharmacy = {
+      id: null, name: { en: name, ar: name }, address: { en: city, ar: city },
+      is_open: false, status: 'closed', phone, hours: '', medicines: [],
+    };
+  }
+
+  showPharmacistStage('pending');
+}
+
+function previewDashboard() { showPharmacistStage('dashboard'); }
+function editApplication() { showPharmacistStage('gate'); }
+
+/* ============ LANGUAGE / RTL ============ */
+function setLang(lang) {
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.getElementById('btn-ar').classList.toggle('active', lang === 'ar');
+
+  const input = document.getElementById('search-input');
+  input.placeholder = lang === 'ar' ? input.getAttribute('data-ar-placeholder') : input.getAttribute('data-en-placeholder');
+
+  const shifaInput = document.getElementById('shifa-input');
+  shifaInput.placeholder = lang === 'ar' ? shifaInput.getAttribute('data-ar-placeholder') : shifaInput.getAttribute('data-en-placeholder');
+
+  renderPharmacies();
+  if (myPharmacy) renderPharmacistDashboard();
+}
+
+/* ============ CUSTOMER: SEARCH + FILTERS + RENDER ============ */
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('#filter-row .chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderPharmacies();
+}
+
+// Applies the search box + filter chips to whatever list is currently loaded
+// (the built-in directory before GPS, the live GPS results after).
+function applyLocalFilters(source) {
+  const query = document.getElementById('search-input').value.trim().toLowerCase();
+  let results = source;
+
+  if (query) {
+    results = results
+      .map(ph => {
+        const meds = ph.medicines.filter(m =>
+          (m.name.en || '').toLowerCase().includes(query) || (m.name.ar || '').includes(query)
+        );
+        return { ...ph, medicines: meds };
+      })
+      .filter(ph => ph.medicines.length > 0);
+  }
+
+  if (currentFilter === 'open') {
+    results = results.filter(ph => ph.is_open);
+  } else if (currentFilter === 'instock') {
+    results = results.filter(ph => ph.medicines.some(m => m.availability === 'in_stock'));
+  } else if (currentFilter === 'nearest') {
+    results = results.slice().sort((a, b) => (a.distance_km ?? Infinity) - (b.distance_km ?? Infinity));
+  }
+
+  return results;
+}
+
+function renderPharmacies() {
+  clearTimeout(searchDebounceTimer);
+  // The directory is always shown — GPS just replaces it with live nearby
+  // results, it is never required to see something on screen.
+  renderResults(applyLocalFilters(activePharmacies));
+}
+
+// Called after GPS succeeds: asks the Flask backend for real pharmacies around
+// the visitor and swaps them in for the built-in directory.
+// Uses the exact endpoint the backend exposes: /api/pharmacies?lat=&lon=
+async function fetchAndRender(lat, lon) {
+  if (lat == null || lon == null) { renderPharmacies(); return; }
+
+  document.getElementById('card-list').innerHTML =
+    `<div class="loading-text">${currentLang === 'ar' ? 'جارٍ البحث عن أقرب الصيدليات...' : 'Searching for the nearest pharmacies...'}</div>`;
+
+  const status = document.getElementById('locate-status');
+
+  try {
+    const data = await safeFetchJson('/api/pharmacy-search?lat=' + lat + '&lon=' + lon);
+
+    if (data.status !== 'success') {
+      // Surface the real reason (bad key, exhausted quota, upstream timeout)
+      // instead of silently falling back and looking like "nothing nearby".
+      throw new Error(data.message || 'Unknown server error');
+    }
+
+    if (!data.data || data.data.length === 0) {
+      status.className = 'locate-status error';
+      status.textContent = currentLang === 'ar'
+        ? 'لم نجد صيدليات قريبة — هذه هي صيدلياتنا المسجّلة.'
+        : 'No pharmacies found nearby — showing our listed pharmacies.';
+      activePharmacies = DEFAULT_PHARMACIES;
+      renderPharmacies();
+      return;
+    }
+
+    activePharmacies = data.data.map(normalizeLive);
+    renderPharmacies();
+  } catch (err) {
+    status.className = 'locate-status error';
+    status.textContent = currentLang === 'ar'
+      ? `تعذّر جلب الصيدليات القريبة (${err.message}) — عرض الصيدليات المسجّلة.`
+      : `Couldn't fetch nearby pharmacies (${err.message}) — showing listed pharmacies.`;
+    activePharmacies = DEFAULT_PHARMACIES;
+    renderPharmacies();
+  }
+}
+
+// Manual area/district search — same endpoint, `query` param instead of
+// coordinates. Triggered by pressing Enter in the search box (see the
+// keydown listener near DOMContentLoaded below); typing without Enter still
+// just filters the currently loaded medicines locally, as before.
+// Uses /pharmacy-search (not /api/pharmacy-search) — see the note at the top
+// of app.py about why custom routes avoid the reserved /api/ prefix on Vercel.
+async function searchByArea(area) {
+  if (!area) return;
+
+  document.getElementById('card-list').innerHTML =
+    `<div class="loading-text">${currentLang === 'ar' ? `جارٍ البحث في (${area})...` : `Searching in (${area})...`}</div>`;
+
+  const status = document.getElementById('locate-status');
+  status.className = 'locate-status';
+  status.textContent = '';
+
+  try {
+    const data = await safeFetchJson('/api/pharmacy-search?query=' + encodeURIComponent(area));
+
+    if (data.status !== 'success') {
+      throw new Error(data.message || 'Unknown server error');
+    }
+
+    if (!data.data || data.data.length === 0) {
+      status.className = 'locate-status error';
+      status.textContent = currentLang === 'ar'
+        ? `لم نجد صيدليات في (${area}) — هذه هي صيدلياتنا المسجّلة.`
+        : `No pharmacies found in (${area}) — showing our listed pharmacies.`;
+      activePharmacies = DEFAULT_PHARMACIES;
+      renderPharmacies();
+      return;
+    }
+
+    activePharmacies = data.data.map(normalizeLive);
+    renderPharmacies();
+  } catch (err) {
+    status.className = 'locate-status error';
+    status.textContent = currentLang === 'ar'
+      ? `تعذّر البحث في (${area}) (${err.message}).`
+      : `Couldn't search in (${area}) (${err.message}).`;
+  }
+}
+
+// Maps a row from /api/pharmacies into the shape the cards already expect.
+function normalizeLive(p) {
+  return {
+    name: { en: p.name, ar: p.name },
+    address: { en: p.address, ar: p.address },
+    latitude: p.latitude,
+    longitude: p.longitude,
+    phone: p.phone || '',
+    hours: p.status || '',
+    is_open: !String(p.status || '').includes('مغلق'),
+    distance_km: p.distance_meters != null ? p.distance_meters / 1000 : null,
+    medicines: [],
+  };
+}
+
+function renderResults(results) {
+  lastResults = results;
+
+  const list = document.getElementById('card-list');
+  const emptyState = document.getElementById('empty-state');
+  const countEl = document.getElementById('result-count');
+
+  countEl.textContent = currentLang === 'ar' ? `${results.length} نتيجة` : `${results.length} result${results.length === 1 ? '' : 's'}`;
+
+  if (results.length === 0) { list.innerHTML = ''; emptyState.classList.add('show'); return; }
+  emptyState.classList.remove('show');
+
+  const lang = currentLang;
+  list.innerHTML = results.map((ph, index) => {
+    const medRows = ph.medicines.map(m => `
+      <div class="med-row">
+        <div>
+          <div class="med-name">${escapeHtml(medName(m, lang))}</div>
+          <div class="med-form">${escapeHtml(medForm(m, lang))}</div>
+          ${m.price ? `<div class="med-price">SDG ${Number(m.price).toLocaleString()}</div>` : ''}
+        </div>
+        <span class="stock-tag ${m.availability === 'in_stock' ? 'in' : m.availability === 'low_stock' ? 'low' : 'out'}">${statusLabel[m.availability][lang]}</span>
+      </div>
+    `).join('');
+
+    const openBadge = ph.is_open
+      ? `<span class="open-text">${lang === 'ar' ? 'مفتوحة' : 'Open now'}</span>`
+      : `<span class="closed-text">${lang === 'ar' ? 'مغلقة' : 'Closed'}</span>`;
+
+    // Show meters under 1km for a more precise "just around the corner" feel,
+    // kilometers beyond that.
+    let distanceText = '—';
+    if (typeof ph.distance_km === 'number') {
+      distanceText = ph.distance_km < 1
+        ? `${Math.round(ph.distance_km * 1000)} m`
+        : `${ph.distance_km.toFixed(1)} km`;
+    }
+
+    const directionsBtn = `
+      <a class="action-btn map" href="${directionsUrl(ph)}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 21s-7-6.1-7-11.5A7 7 0 0119 9.5C19 14.9 12 21 12 21z" stroke="currentColor" stroke-width="2"/>
+          <circle cx="12" cy="9.5" r="2.3" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        ${lang === 'ar' ? 'الاتجاهات 🗺️' : 'Directions 🗺️'}
+      </a>`;
+
+    // Smart contact handling: only render Call/WhatsApp when a real phone
+    // number came back from Overpass (`phone` or `contact:phone` tag) — never
+    // a dead `tel:` or `wa.me` link with no number behind it. Otherwise fall
+    // back to a "Share Location" action so the pharmacy is still reachable.
+    const hasPhone = !!(ph.phone && String(ph.phone).trim());
+    let contactButtons;
+    let columnClass;
+
+    if (hasPhone) {
+      const waText = lang === 'ar'
+        ? `مرحباً، أريد الاستفسار عن توفر دواء في ${ph.name.ar || ph.name.en}.`
+        : `Hello, I'd like to ask about medicine availability at ${ph.name.en}.`;
+      contactButtons = `
+        <a class="action-btn call" href="${telUrl(ph.phone)}">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" fill="currentColor"/>
+          </svg>
+          ${lang === 'ar' ? 'اتصال 📞' : 'Call 📞'}
+        </a>
+        <a class="action-btn whatsapp" href="${whatsappUrl(ph.phone, waText)}" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" fill="currentColor"/>
+          </svg>
+          ${lang === 'ar' ? 'طلب واتساب 💬' : 'WhatsApp Order 💬'}
+        </a>`;
+      columnClass = 'cols-3';
+    } else {
+      contactButtons = `
+        <button type="button" class="action-btn share" onclick="shareLocation(${index})">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="18" cy="5" r="2.4" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="6" cy="12" r="2.4" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="18" cy="19" r="2.4" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M8.2 10.8l7.6-4.2M8.2 13.2l7.6 4.2" stroke="currentColor" stroke-width="1.8"/>
+          </svg>
+          ${lang === 'ar' ? 'مشاركة الموقع 📤' : 'Share Location 📤'}
+        </button>`;
+      columnClass = 'cols-2';
+    }
+
+    return `
+      <article class="pcard">
+        <div class="pcard-top">
+          <div>
+            <div class="pcard-name-row">
+              <span class="status-dot ${ph.is_open ? 'open' : 'closed'}"></span>
+              <span class="pcard-name">${escapeHtml(ph.name[lang])}</span>
+            </div>
+            <div class="pcard-meta">
+              <span>${escapeHtml(ph.address[lang] || (lang === 'ar' ? 'بدون عنوان مسجل' : 'No address on record'))}</span>
+              <span class="dot-sep"></span>
+              ${openBadge}
+            </div>
+          </div>
+          <div class="distance-badge">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 21s-7-6.1-7-11.5A7 7 0 0119 9.5C19 14.9 12 21 12 21z" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="9.5" r="2.3" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            ${distanceText}
+          </div>
+        </div>
+        <div class="med-list">${medRows}</div>
+        <div class="pcard-actions ${columnClass}">
+          ${directionsBtn}
+          ${contactButtons}
+        </div>
+      </article>
+    `;
+  }).join('');
+}
+
+// Fallback contact path when no phone number exists on the OSM record.
+// Prefers the native share sheet (great on mobile); falls back to opening a
+// generic WhatsApp share screen with no pre-filled recipient.
+async function shareLocation(index) {
+  const ph = lastResults[index];
+  if (!ph) return;
+
+  const lang = currentLang;
+  const name = ph.name[lang] || ph.name.en;
+  const link = directionsUrl(ph);
+  const shareText = lang === 'ar'
+    ? `📍 ${name}\nموقع الصيدلية على الخريطة:\n${link}`
+    : `📍 ${name}\nPharmacy location on the map:\n${link}`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: name, text: shareText, url: link });
+      return;
+    } catch (err) {
+      // User dismissed the native share sheet — fall through to the WhatsApp fallback below.
+    }
+  }
+  window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank', 'noopener');
+}
+
+/* ============ PHARMACIST: INFO CARD ============ */
+async function toggleOpenStatus() {
+  const checked = document.getElementById('pharm-open-toggle').checked;
+  myPharmacy.is_open = checked;
+  myPharmacy.status = checked ? 'open' : 'closed';
+  updateOpenCaption();
+  renderPharmacies();
+  if (myPharmacyId) {
+    try { await apiSend(`/api/pharmacies/${myPharmacyId}`, 'PUT', { status: myPharmacy.status }); }
+    catch (err) { /* keep the local toggle even if the write didn't persist */ }
+  }
+}
+
+function updateOpenCaption() {
+  const ar = document.getElementById('open-status-caption');
+  const en = document.getElementById('open-status-caption-en');
+  if (myPharmacy.is_open) {
+    ar.textContent = 'مفتوحة الآن'; en.textContent = 'Open now';
+    ar.classList.add('is-open'); en.classList.add('is-open');
+  } else {
+    ar.textContent = 'مغلقة'; en.textContent = 'Closed';
+    ar.classList.remove('is-open'); en.classList.remove('is-open');
+  }
+}
+
+async function savePharmacyInfo(e) {
+  const name = document.getElementById('pharm-name').value.trim();
+  const address = document.getElementById('pharm-address').value.trim();
+  const phone = document.getElementById('pharm-phone').value.trim();
+  const hours = document.getElementById('pharm-hours').value.trim();
+  if (name) { myPharmacy.name.en = name; myPharmacy.name.ar = name; }
+  if (address) { myPharmacy.address.en = address; myPharmacy.address.ar = address; }
+  if (phone) myPharmacy.phone = phone;
+  if (hours) myPharmacy.hours = hours;
+  renderPharmacies();
+
+  const btn = e.currentTarget;
+  const original = btn.innerHTML;
+
+  if (myPharmacyId) {
+    try {
+      await apiSend(`/api/pharmacies/${myPharmacyId}`, 'PUT', {
+        name_en: name, name_ar: name, address_en: address, address_ar: address, phone, hours,
+      });
+    } catch (err) { /* keep the local update even if it didn't persist */ }
+  }
+  btn.innerHTML = currentLang === 'ar' ? 'تم الحفظ ✓' : 'Saved ✓';
+  setTimeout(() => { btn.innerHTML = original; }, 1400);
+}
+
+/* ============ PHARMACIST: MEDICINE FORM ============ */
+async function handleMedSubmit(e) {
+  e.preventDefault();
+  const name = document.getElementById('f-name').value.trim();
+  const form = document.getElementById('f-form').value.trim();
+  const price = Number(document.getElementById('f-price').value);
+  const status = document.getElementById('f-status').value; // 'in' | 'low' | 'out'
+  const availability = status === 'in' ? 'in_stock' : status === 'low' ? 'low_stock' : 'out_of_stock';
+  if (!name || !form || !price) return;
+
+  if (editingMedicineId !== null) {
+    const existing = myPharmacy.medicines.find(m => m.id === editingMedicineId);
+    if (existing) {
+      existing.name = { en: name, ar: name };
+      existing.form = { en: form, ar: form };
+      existing.price = price;
+      existing.availability = availability;
+    }
+    if (editingMedicineId && myPharmacyId) {
+      try {
+        await apiSend(`/api/medicines/${editingMedicineId}`, 'PUT', {
+          name_en: name, name_ar: name, form_en: form, form_ar: form, price, availability,
+        });
+      } catch (err) { /* keep local edit even if it didn't persist */ }
+    }
+  } else {
+    const medObj = { id: null, name: { en: name, ar: name }, form: { en: form, ar: form }, price, availability };
+    if (myPharmacyId) {
+      try {
+        const created = await apiSend(`/api/pharmacies/${myPharmacyId}/medicines`, 'POST', {
+          name_en: name, name_ar: name, form_en: form, form_ar: form, price, availability,
+        });
+        medObj.id = created.id;
+      } catch (err) { /* keep it as a local-only entry */ }
+    }
+    myPharmacy.medicines.push(medObj);
+  }
+
+  resetMedForm();
+  renderPharmacistDashboard();
+  renderPharmacies();
+}
+
+function resetMedForm() {
+  editingMedicineId = null;
+  document.getElementById('med-form').reset();
+  document.getElementById('form-submit-btn').innerHTML =
+    '<span data-ar-only>إضافة الدواء</span><span data-en-only>Add medicine</span>';
+  document.getElementById('form-cancel-btn').hidden = true;
+  document.getElementById('form-heading').textContent = 'Add medicine';
+  document.getElementById('form-heading-ar').textContent = 'إضافة دواء';
+}
+
+function cancelEdit() { resetMedForm(); }
+
+function availabilityToStatus(av) { return av === 'in_stock' ? 'in' : av === 'low_stock' ? 'low' : 'out'; }
+
+function startEdit(medicineId) {
+  const m = myPharmacy.medicines.find(x => x.id === medicineId);
+  if (!m) return;
+  editingMedicineId = medicineId;
+  document.getElementById('f-name').value = medName(m, 'en');
+  document.getElementById('f-form').value = medForm(m, 'en');
+  document.getElementById('f-price').value = m.price || '';
+  document.getElementById('f-status').value = availabilityToStatus(m.availability);
+  document.getElementById('form-submit-btn').innerHTML =
+    '<span data-ar-only>تحديث الدواء</span><span data-en-only>Update medicine</span>';
+  document.getElementById('form-cancel-btn').hidden = false;
+  document.getElementById('form-heading').textContent = 'Edit medicine';
+  document.getElementById('form-heading-ar').textContent = 'تعديل الدواء';
+  document.getElementById('med-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function quickUpdateStock(medicineId, statusValue) {
+  const availability = statusValue === 'in' ? 'in_stock' : statusValue === 'low' ? 'low_stock' : 'out_of_stock';
+  const m = myPharmacy.medicines.find(x => x.id === medicineId);
+  if (m) m.availability = availability;
+  renderPharmacistDashboard();
+  renderPharmacies();
+  if (medicineId) {
+    try { await apiSend(`/api/medicines/${medicineId}`, 'PUT', { availability }); }
+    catch (err) { /* keep the local status even if it didn't persist */ }
+  }
+}
+
+async function deleteMed(medicineId) {
+  const msg = currentLang === 'ar' ? 'هل تريد حذف هذا الدواء من القائمة؟' : 'Remove this medicine from your listing?';
+  if (!confirm(msg)) return;
+  myPharmacy.medicines = myPharmacy.medicines.filter(m => m.id !== medicineId);
+  if (editingMedicineId === medicineId) resetMedForm();
+  renderPharmacistDashboard();
+  renderPharmacies();
+  if (medicineId) {
+    try {
+      await fetch(`/api/medicines/${medicineId}`, { method: 'DELETE' });
+    } catch (err) { /* keep it removed locally even if the write didn't persist */ }
+  }
+}
+
+/* ============ PHARMACIST: RENDER ============ */
+function renderPharmacistDashboard() {
+  if (!myPharmacy) return;
+  document.getElementById('pharm-name').value = myPharmacy.name.en;
+  document.getElementById('pharm-address').value = myPharmacy.address.en;
+  document.getElementById('pharm-phone').value = myPharmacy.phone || '';
+  document.getElementById('pharm-hours').value = myPharmacy.hours || '';
+  document.getElementById('pharm-open-toggle').checked = !!myPharmacy.is_open;
+  updateOpenCaption();
+
+  const lang = currentLang;
+  const list = document.getElementById('inv-list');
+  const countEl = document.getElementById('inv-count');
+
+  countEl.textContent = lang === 'ar'
+    ? `${myPharmacy.medicines.length} دواء`
+    : `${myPharmacy.medicines.length} medicine${myPharmacy.medicines.length === 1 ? '' : 's'}`;
+
+  if (myPharmacy.medicines.length === 0) {
+    list.innerHTML = `<div class="inv-empty">${lang === 'ar' ? 'لم تتم إضافة أدوية بعد.' : 'No medicines listed yet.'}</div>`;
+    return;
+  }
+
+  list.innerHTML = myPharmacy.medicines.map(m => `
+    <div class="inv-card">
+      <div class="inv-card-top">
+        <div>
+          <div class="inv-name">${escapeHtml(medName(m, lang))}</div>
+          <div class="inv-meta">${escapeHtml(medForm(m, lang))} · <span class="inv-price">SDG ${Number(m.price || 0).toLocaleString()}</span></div>
+        </div>
+        <span class="stock-tag ${m.availability === 'in_stock' ? 'in' : m.availability === 'low_stock' ? 'low' : 'out'}">${statusLabel[m.availability][lang]}</span>
+      </div>
+      <div class="inv-actions">
+        <button type="button" class="inv-btn" onclick="startEdit(${m.id})">${lang === 'ar' ? 'تعديل' : 'Edit'}</button>
+        <select class="quick-select" onchange="quickUpdateStock(${m.id}, this.value)" aria-label="Update stock">
+          <option value="in" ${m.availability === 'in_stock' ? 'selected' : ''}>${lang === 'ar' ? 'متوفر' : 'In stock'}</option>
+          <option value="low" ${m.availability === 'low_stock' ? 'selected' : ''}>${lang === 'ar' ? 'كمية محدودة' : 'Low stock'}</option>
+          <option value="out" ${m.availability === 'out_of_stock' ? 'selected' : ''}>${lang === 'ar' ? 'غير متوفر' : 'Out of stock'}</option>
+        </select>
+        <button type="button" class="inv-btn danger" onclick="deleteMed(${m.id})">${lang === 'ar' ? 'حذف' : 'Delete'}</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ============ SHIFA AI — floating pharmacist assistant ============ */
+let shifaHistory = []; // [{role: 'user'|'model', text: '...'}, ...]
+let shifaOpen = false;
+let shifaGreeted = false;
+
+function openShifaChat() {
+  shifaOpen = true;
+  document.getElementById('shifa-panel').classList.remove('hidden');
+  document.getElementById('shifa-fab').classList.add('hidden');
+
+  if (!shifaGreeted) {
+    shifaGreeted = true;
+    const greeting = currentLang === 'ar'
+      ? 'مرحباً 👋 أنا شفاء AI، المساعد الصيدلي الذكي التابع لموقع PharmaNear. اسألني عن أي دواء، جرعته، أو تداخلاته الدوائية.'
+      : "Hi 👋 I'm Shifa AI, PharmaNear's smart pharmacist assistant. Ask me about any medicine, its dosage, or drug interactions.";
+    appendShifaMessage('model', greeting);
+  }
+
+  document.getElementById('shifa-input').focus();
+}
+
+function closeShifaChat() {
+  shifaOpen = false;
+  document.getElementById('shifa-panel').classList.add('hidden');
+  document.getElementById('shifa-fab').classList.remove('hidden');
+}
+
+function appendShifaMessage(role, text) {
+  const list = document.getElementById('shifa-messages');
+  const div = document.createElement('div');
+  div.className = 'shifa-msg ' + role;
+  div.textContent = text;
+  list.appendChild(div);
+  list.scrollTop = list.scrollHeight;
+  return div;
+}
+
+async function handleShifaSubmit(e) {
+  e.preventDefault();
+  const input = document.getElementById('shifa-input');
+  const sendBtn = document.getElementById('shifa-send');
+  const message = input.value.trim();
+  if (!message) return;
+
+  appendShifaMessage('user', message);
+  input.value = '';
+  input.disabled = true;
+  sendBtn.disabled = true;
+
+  const typingEl = appendShifaMessage('model typing', currentLang === 'ar' ? 'شفاء AI تكتب...' : 'Shifa AI is typing...');
+
+  try {
+    const data = await safeFetchJson('/api/shifa-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: message, history: shifaHistory }),
+    });
+
+    typingEl.remove();
+
+    if (data.status !== 'success') {
+      appendShifaMessage('error', data.message || (currentLang === 'ar' ? 'حدث خطأ غير متوقع.' : 'An unexpected error occurred.'));
+      return;
+    }
+
+    appendShifaMessage('model', data.reply);
+    shifaHistory.push({ role: 'user', text: message });
+    shifaHistory.push({ role: 'model', text: data.reply });
+    // Keep the last few turns only — enough context without an ever-growing payload.
+    if (shifaHistory.length > 12) shifaHistory = shifaHistory.slice(-12);
+  } catch (err) {
+    typingEl.remove();
+    appendShifaMessage('error', currentLang === 'ar'
+      ? `تعذّر التواصل مع شفاء AI (${err.message}).`
+      : `Couldn't reach Shifa AI (${err.message}).`);
+  } finally {
+    input.disabled = false;
+    sendBtn.disabled = false;
+    input.focus();
+  }
+}
+
+/* ============ INIT ============ */
+document.addEventListener('DOMContentLoaded', () => {
+  // Show the listed pharmacies right away. GPS is only requested when the
+  // visitor actually taps the 📍 button next to the search box.
+  renderPharmacies();
+
+  // Pressing Enter in the search box searches the backend by area/district
+  // name (fetch('/api/pharmacies?query=...')) — typing without pressing
+  // Enter still just filters the currently loaded medicines locally.
+  const searchInput = document.getElementById('search-input');
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const area = searchInput.value.trim();
+      if (area) searchByArea(area);
+    }
+  });
+});
+</script>
+</body>
+</html>
