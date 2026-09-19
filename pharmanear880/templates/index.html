@@ -491,10 +491,86 @@
   .action-btn.whatsapp:hover{ background:#2fe379; }
   .action-btn.share{ background:transparent; color:var(--text-hi); }
   .action-btn.share:hover{ border-color:var(--gold-500); color:var(--gold-400); }
+
+  /* ============ SHIFA AI — floating pharmacist assistant ============ */
+  .shifa-fab{
+    position:fixed; inset-inline-end:20px; bottom:20px; z-index:60;
+    display:flex; align-items:center; gap:9px;
+    background:linear-gradient(135deg, var(--emerald-400), var(--emerald-500));
+    color:#04150f; border:none; padding:14px 18px; border-radius:var(--radius-pill);
+    font-size:14px; font-weight:800; box-shadow:0 14px 30px -10px rgba(16,185,129,.6);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .shifa-fab svg{width:20px; height:20px; flex-shrink:0;}
+  .shifa-fab:hover{ transform:translateY(-2px); box-shadow:0 18px 36px -10px rgba(16,185,129,.65); }
+  .shifa-fab.hidden{ display:none; }
+
+  .shifa-panel{
+    position:fixed; inset-inline-end:20px; bottom:20px; z-index:70;
+    width:min(380px, calc(100vw - 32px)); height:min(600px, calc(100vh - 40px));
+    background:var(--navy-950); border:1px solid var(--line-700); border-radius:20px;
+    box-shadow:0 30px 70px -20px rgba(0,0,0,.7);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .shifa-panel.hidden{ display:none; }
+
+  .shifa-header{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:14px 16px; border-bottom:1px solid var(--line-700); background:var(--card-800);
+    flex-shrink:0;
+  }
+  .shifa-header-title{ display:flex; align-items:center; gap:10px; }
+  .shifa-avatar{
+    width:34px; height:34px; border-radius:10px; flex-shrink:0;
+    background:linear-gradient(150deg, var(--emerald-400), #059669);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .shifa-avatar svg{ width:18px; height:18px; color:#04150f; }
+  .shifa-header-title b{ font-size:14.5px; font-weight:800; display:block; }
+  .shifa-header-title span{ font-size:11px; color:var(--emerald-400); }
+  .shifa-close{
+    background:transparent; border:none; color:var(--text-low); cursor:pointer;
+    width:28px; height:28px; display:flex; align-items:center; justify-content:center;
+    border-radius:8px; transition:background .15s ease, color .15s ease;
+  }
+  .shifa-close:hover{ background:var(--line-700); color:var(--text-hi); }
+  .shifa-close svg{ width:16px; height:16px; }
+
+  .shifa-messages{ flex:1 1 auto; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .shifa-msg{ max-width:85%; padding:10px 13px; border-radius:14px; font-size:13.5px; line-height:1.7; white-space:pre-wrap; }
+  .shifa-msg.user{ align-self:flex-end; background:var(--emerald-500); color:#04150f; border-bottom-right-radius:4px; }
+  html[dir="rtl"] .shifa-msg.user{ border-bottom-right-radius:14px; border-bottom-left-radius:4px; }
+  .shifa-msg.model{ align-self:flex-start; background:var(--card-800); border:1px solid var(--line-700); color:var(--text-hi); border-bottom-left-radius:4px; }
+  html[dir="rtl"] .shifa-msg.model{ align-self:flex-end; border-bottom-left-radius:14px; border-bottom-right-radius:4px; }
+  html[dir="rtl"] .shifa-msg.user{ align-self:flex-start; }
+  .shifa-msg.error{ background:rgba(248,113,113,.1); border-color:rgba(248,113,113,.35); color:var(--red-400); }
+  .shifa-msg.typing{ color:var(--text-low); font-style:italic; }
+
+  .shifa-input-row{
+    display:flex; gap:8px; padding:12px; border-top:1px solid var(--line-700);
+    background:var(--card-800); flex-shrink:0;
+  }
+  .shifa-input{
+    flex:1 1 auto; background:var(--navy-950); border:1px solid var(--line-700);
+    color:var(--text-hi); border-radius:var(--radius-pill); padding:11px 16px; font-size:13.5px; outline:none;
+  }
+  .shifa-input:focus{ border-color:var(--emerald-500); box-shadow:0 0 0 3px var(--emerald-glow); }
+  .shifa-send{
+    flex-shrink:0; width:40px; height:40px; border-radius:50%; border:none;
+    background:var(--emerald-500); color:#04150f; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:background .15s ease, opacity .15s ease;
+  }
+  .shifa-send:hover{ background:var(--emerald-400); }
+  .shifa-send:disabled{ opacity:.5; cursor:default; }
+  .shifa-send svg{ width:17px; height:17px; }
+  html[dir="rtl"] .shifa-send svg{ transform:scaleX(-1); }
+
+  @media (max-width:420px){
+    .shifa-panel{ inset-inline-end:12px; bottom:12px; width:calc(100vw - 24px); }
+    .shifa-fab{ inset-inline-end:12px; bottom:12px; }
+  }
 </style>
 </head>
-<body>
-
 <body>
 
 <header class="site-header">
@@ -919,6 +995,54 @@
   </div>
 </footer>
 
+<!-- ============ SHIFA AI — floating pharmacist assistant ============ -->
+<button type="button" class="shifa-fab" id="shifa-fab" onclick="openShifaChat()">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 3l7 3v5c0 5-3.2 8.5-7 10-3.8-1.5-7-5-7-10V6l7-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M9.5 12l1.8 1.8L15 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span data-ar-only>شفاء AI</span><span data-en-only>Shifa AI</span>
+</button>
+
+<div class="shifa-panel hidden" id="shifa-panel" role="dialog" aria-label="Shifa AI">
+  <div class="shifa-header">
+    <div class="shifa-header-title">
+      <div class="shifa-avatar">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 3l7 3v5c0 5-3.2 8.5-7 10-3.8-1.5-7-5-7-10V6l7-3z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div>
+        <b data-ar-only>شفاء AI</b><b data-en-only>Shifa AI</b>
+        <span data-ar-only>مساعدك الصيدلي الذكي</span><span data-en-only>Your smart pharmacist assistant</span>
+      </div>
+    </div>
+    <button type="button" class="shifa-close" onclick="closeShifaChat()" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="shifa-messages" id="shifa-messages"></div>
+
+  <form class="shifa-input-row" id="shifa-form" onsubmit="handleShifaSubmit(event)">
+    <input
+      id="shifa-input"
+      class="shifa-input"
+      type="text"
+      autocomplete="off"
+      data-ar-placeholder="اسأل عن دواء، جرعة، تداخل دوائي..."
+      data-en-placeholder="Ask about a medicine, dosage, drug interaction..."
+      placeholder="اسأل عن دواء، جرعة، تداخل دوائي...">
+    <button type="submit" class="shifa-send" id="shifa-send" aria-label="Send">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 12l16-7-6 16-2.5-6.5L4 12z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </form>
+</div>
+
 <script>
 /* ==========================================================================
    PharmaNear — frontend logic
@@ -1199,6 +1323,9 @@ function setLang(lang) {
 
   const input = document.getElementById('search-input');
   input.placeholder = lang === 'ar' ? input.getAttribute('data-ar-placeholder') : input.getAttribute('data-en-placeholder');
+
+  const shifaInput = document.getElementById('shifa-input');
+  shifaInput.placeholder = lang === 'ar' ? shifaInput.getAttribute('data-ar-placeholder') : shifaInput.getAttribute('data-en-placeholder');
 
   renderPharmacies();
   if (myPharmacy) renderPharmacistDashboard();
@@ -1683,6 +1810,88 @@ function renderPharmacistDashboard() {
       </div>
     </div>
   `).join('');
+}
+
+/* ============ SHIFA AI — floating pharmacist assistant ============ */
+let shifaHistory = []; // [{role: 'user'|'model', text: '...'}, ...]
+let shifaOpen = false;
+let shifaGreeted = false;
+
+function openShifaChat() {
+  shifaOpen = true;
+  document.getElementById('shifa-panel').classList.remove('hidden');
+  document.getElementById('shifa-fab').classList.add('hidden');
+
+  if (!shifaGreeted) {
+    shifaGreeted = true;
+    const greeting = currentLang === 'ar'
+      ? 'مرحباً 👋 أنا شفاء AI، المساعد الصيدلي الذكي التابع لموقع PharmaNear. اسألني عن أي دواء، جرعته، أو تداخلاته الدوائية.'
+      : "Hi 👋 I'm Shifa AI, PharmaNear's smart pharmacist assistant. Ask me about any medicine, its dosage, or drug interactions.";
+    appendShifaMessage('model', greeting);
+  }
+
+  document.getElementById('shifa-input').focus();
+}
+
+function closeShifaChat() {
+  shifaOpen = false;
+  document.getElementById('shifa-panel').classList.add('hidden');
+  document.getElementById('shifa-fab').classList.remove('hidden');
+}
+
+function appendShifaMessage(role, text) {
+  const list = document.getElementById('shifa-messages');
+  const div = document.createElement('div');
+  div.className = 'shifa-msg ' + role;
+  div.textContent = text;
+  list.appendChild(div);
+  list.scrollTop = list.scrollHeight;
+  return div;
+}
+
+async function handleShifaSubmit(e) {
+  e.preventDefault();
+  const input = document.getElementById('shifa-input');
+  const sendBtn = document.getElementById('shifa-send');
+  const message = input.value.trim();
+  if (!message) return;
+
+  appendShifaMessage('user', message);
+  input.value = '';
+  input.disabled = true;
+  sendBtn.disabled = true;
+
+  const typingEl = appendShifaMessage('model typing', currentLang === 'ar' ? 'شفاء AI تكتب...' : 'Shifa AI is typing...');
+
+  try {
+    const data = await safeFetchJson('/api/shifa-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: message, history: shifaHistory }),
+    });
+
+    typingEl.remove();
+
+    if (data.status !== 'success') {
+      appendShifaMessage('error', data.message || (currentLang === 'ar' ? 'حدث خطأ غير متوقع.' : 'An unexpected error occurred.'));
+      return;
+    }
+
+    appendShifaMessage('model', data.reply);
+    shifaHistory.push({ role: 'user', text: message });
+    shifaHistory.push({ role: 'model', text: data.reply });
+    // Keep the last few turns only — enough context without an ever-growing payload.
+    if (shifaHistory.length > 12) shifaHistory = shifaHistory.slice(-12);
+  } catch (err) {
+    typingEl.remove();
+    appendShifaMessage('error', currentLang === 'ar'
+      ? `تعذّر التواصل مع شفاء AI (${err.message}).`
+      : `Couldn't reach Shifa AI (${err.message}).`);
+  } finally {
+    input.disabled = false;
+    sendBtn.disabled = false;
+    input.focus();
+  }
 }
 
 /* ============ INIT ============ */
