@@ -1220,17 +1220,34 @@ function captureLocation() {
       clearTimeout(searchDebounceTimer);
       fetchAndRender(lat, lon);
     },
-    err => {
-            console.warn("GPS error fallback:", err);
-            btn.classList.remove('loading');
-            status.className = 'locate-status success';
-            status.textContent = currentLang === 'ar' ? 'تم جلب صيدليات المنطقة القريبة ✓' : 'Showing nearby pharmacies ✓';
-            
-            clearTimeout(searchDebounceTimer);
-            // البديل الفوري: جلب صيدليات شرق النيل عند تعذر الـ GPS
-            fetchAndRender("شرق النيل");
+    (err) => {
+      btn.classList.remove('loading');
+      status.className = 'locate-status error';
+      // err.code distinguishes three very different situations the generic
+      // "check permissions" message used to lump together:
+      //   1 = PERMISSION_DENIED   — the browser-level site permission is blocked
+      //   2 = POSITION_UNAVAILABLE — permission is fine, but the device/OS
+      //       could not produce a location fix at all (very common on
+      //       desktops/laptops with no GPS hardware and OS location services
+      //       turned off — this is NOT a permissions problem)
+      //   3 = TIMEOUT              — no fix arrived within the time allotted
+      const messages = {
+        ar: {
+          1: 'تم رفض إذن الموقع لهذا الموقع في المتصفح. افتح إعدادات الموقع (أيقونة القفل بجانب الرابط) واسمح بالوصول للموقع الجغرافي.',
+          2: 'تعذّر تحديد موقعك — هذا عادة لا علاقة له بإذن المتصفح، بل يعني أن خدمة تحديد الموقع في نظام التشغيل نفسه مغلقة. تحقق من: Windows → الإعدادات → الخصوصية والأمان → الموقع، وتأكد أنها مُفعّلة لكل من النظام والمتصفح.',
+          3: 'انتهت مهلة الانتظار قبل تحديد موقعك. هذا شائع على أجهزة الحاسوب التي لا تملك GPS حقيقياً وتعتمد على شبكة الواي فاي لتقدير الموقع. حاول مرة أخرى، أو تأكد من اتصال الواي فاي.',
         },
-        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+        en: {
+          1: 'Location permission was denied for this site. Open the site settings (the lock icon next to the address) and allow location access.',
+          2: "Couldn't determine your location — this is usually not a browser permission issue, but the operating system's own location service being turned off. Check: Windows → Settings → Privacy & Security → Location, and make sure it's enabled for both the system and the browser.",
+          3: 'Timed out waiting for your location. This is common on computers without real GPS hardware that rely on Wi-Fi-based positioning. Try again, or check your Wi-Fi connection.',
+        },
+      };
+      const lang = currentLang === 'ar' ? 'ar' : 'en';
+      status.textContent = messages[lang][err.code] || messages[lang][2];
+    },
+    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+  );
 }
 
 /* ============ NAV HELPERS ============ */
