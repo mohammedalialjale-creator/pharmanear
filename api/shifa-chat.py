@@ -57,7 +57,9 @@ SYSTEM_PROMPT = """أنتِ "شفاء AI" — المساعد الصيدلي ال
 - الإيبوبروفين والباراسيتامول دواءان مختلفان تماماً (الإيبوبروفين مضاد التهاب غير ستيرويدي NSAID، والباراسيتامول مسكّن وخافض حرارة من فئة مختلفة تماماً) — لا تخلطي بينهما ولا بين أي دواءين آخرين مختلفين، حتى لو كانا يُستخدمان لنفس الغرض (تسكين الألم مثلاً).
 - إذا لم تكوني متأكدة تماماً من اسم الدواء أو تعرّفتِ على تهجئة غير مألوفة، اسألي الزائر للتأكيد بدل التخمين وتقديم معلومات عن دواء مختلف.
 
-أسلوبك: دافئ، مهني، مطمئن، ومختصر — لست بديلاً عن الصيدلي، أنتِ مساعدة أولية توجّه الزائر بشكل صحيح."""
+أسلوبك: دافئ، مهني، مطمئن، ومختصر — لست بديلاً عن الصيدلي، أنتِ مساعدة أولية توجّه الزائر بشكل صحيح.
+
+نصيحة في طول الإجابة: نظّمي إجابتك في أقسام قصيرة وواضحة (دواعي الاستعمال، الجرعة الشائعة، تنبيهات) بدل فقرة واحدة طويلة، واجعلي كل قسم بضع نقاط فقط — إجابة مركّزة ومكتملة أفضل من إجابة طويلة قد تنقطع قبل اكتمالها."""
 
 # Appended programmatically to every single reply — not left to the model's
 # discretion, so it is guaranteed present regardless of what Gemini returns.
@@ -78,7 +80,7 @@ def call_gemini(user_message, history):
     payload = {
         "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
         "contents": contents,
-        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 700},
+        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1536},
     }
 
     request = urllib.request.Request(
@@ -102,6 +104,16 @@ def call_gemini(user_message, history):
     text = "".join(p.get("text", "") for p in parts).strip()
     if not text:
         raise ValueError("رد فارغ من النموذج.")
+
+    # If Gemini stopped because it hit maxOutputTokens, the text is cut off
+    # mid-sentence (sometimes mid-word). Rather than silently hand the user a
+    # broken sentence, say so plainly — a short honest note is far better
+    # than an answer that looks finished but abruptly isn't.
+    if candidates[0].get("finishReason") == "MAX_TOKENS":
+        note = (
+            "\n\n(انقطعت الإجابة لطولها — اسألني بصيغة أضيق، مثلاً عن نقطة واحدة محددة، وسأكمل بالتفصيل.)"
+        )
+        text = text.rstrip() + note
 
     return text + SAFETY_DISCLAIMER
 
