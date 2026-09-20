@@ -1832,9 +1832,27 @@ function renderPharmacistDashboard() {
 }
 
 /* ============ SHIFA AI — floating pharmacist assistant ============ */
-let shifaHistory = []; // [{role: 'user'|'model', text: '...'}, ...]
+// Persisted in sessionStorage (survives a reload in the same tab, cleared
+// when the tab closes) so a reload mid-conversation doesn't silently wipe
+// the chat and quietly restart it from the greeting — which looks like the
+// assistant "forgot" what was just asked.
+let shifaHistory = loadShifaState();
 let shifaOpen = false;
-let shifaGreeted = false;
+let shifaGreeted = shifaHistory.length > 0;
+
+function loadShifaState() {
+  try {
+    const raw = sessionStorage.getItem('shifaHistory');
+    return raw ? JSON.parse(raw) : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+function saveShifaState() {
+  try { sessionStorage.setItem('shifaHistory', JSON.stringify(shifaHistory)); }
+  catch (err) { /* storage unavailable (private browsing, quota) — chat still works, just won't persist */ }
+}
 
 function openShifaChat() {
   shifaOpen = true;
@@ -1847,6 +1865,9 @@ function openShifaChat() {
       ? 'مرحباً 👋 أنا شفاء AI، المساعد الصيدلي الذكي التابع لموقع PharmaNear. اسألني عن أي دواء، جرعته، أو تداخلاته الدوائية.'
       : "Hi 👋 I'm Shifa AI, PharmaNear's smart pharmacist assistant. Ask me about any medicine, its dosage, or drug interactions.";
     appendShifaMessage('model', greeting);
+  } else {
+    // Restore the conversation that was already in progress before a reload.
+    shifaHistory.forEach(turn => appendShifaMessage(turn.role, turn.text));
   }
 
   document.getElementById('shifa-input').focus();
@@ -1901,6 +1922,7 @@ async function handleShifaSubmit(e) {
     shifaHistory.push({ role: 'model', text: data.reply });
     // Keep the last few turns only — enough context without an ever-growing payload.
     if (shifaHistory.length > 12) shifaHistory = shifaHistory.slice(-12);
+    saveShifaState();
   } catch (err) {
     typingEl.remove();
     appendShifaMessage('error', currentLang === 'ar'

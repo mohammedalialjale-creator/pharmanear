@@ -61,9 +61,31 @@ def fetch_pharmacies(lat, lon, area):
     has_coords = lat is not None and lon is not None
 
     if area:
-        params = {"engine": "google_maps", "q": f"صيدلية في {area}", "hl": "ar", "api_key": SERPAPI_KEY}
+        params = {
+            "engine": "google_maps",
+            "type": "search",  # required by SerpAPI's Google Maps engine — was
+                                # missing entirely before, which is the most
+                                # likely cause of results hundreds/thousands of
+                                # km away: without it, the API is not reliably
+                                # scoped to "return a ranked local result list".
+            "q": f"صيدلية في {area}",
+            "hl": "ar",
+            "api_key": SERPAPI_KEY,
+        }
     elif has_coords:
-        params = {"engine": "google_maps", "q": "صيدلية", "ll": f"@{lat},{lon},15z", "hl": "ar", "api_key": SERPAPI_KEY}
+        params = {
+            "engine": "google_maps",
+            "type": "search",
+            "q": "صيدلية",
+            "ll": f"@{lat},{lon},15z",
+            # Forces results closer to the given coordinates. SerpAPI's own
+            # docs note that ll alone does not guarantee proximity — nearby
+            # is what actually enforces it for a bare, location-less query
+            # like ours ("صيدلية" with no city/district named in q).
+            "nearby": "true",
+            "hl": "ar",
+            "api_key": SERPAPI_KEY,
+        }
     else:
         return {"status": "error", "message": "الرجاء تحديد موقعك أو إدخال اسم المنطقة."}, 400
 
@@ -101,6 +123,17 @@ def fetch_pharmacies(lat, lon, area):
         })
 
     if has_coords:
+        # SerpAPI's own documentation is explicit that neither `ll` nor
+        # `nearby` guarantee every result is actually close to the given
+        # point — Google Maps sometimes pads a thin local result set with
+        # distant or even out-of-country matches. Since this feature's whole
+        # purpose is "pharmacies near me", silently showing a result 1,000+
+        # km away is worse than showing fewer, genuinely nearby results.
+        MAX_REASONABLE_KM = 60
+        pharmacies = [
+            p for p in pharmacies
+            if p["distance_meters"] is None or p["distance_meters"] <= MAX_REASONABLE_KM * 1000
+        ]
         pharmacies.sort(key=lambda p: p["distance_meters"] if p["distance_meters"] is not None else float("inf"))
 
     return {"status": "success", "count": len(pharmacies), "data": pharmacies}, 200
@@ -148,4 +181,3 @@ if __name__ == "__main__":
     print(fetch_pharmacies(15.58, 32.53, None))
     print(fetch_pharmacies(None, None, "الرياض"))
     print(fetch_pharmacies(None, None, None))
-    
