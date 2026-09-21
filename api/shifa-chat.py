@@ -9,8 +9,8 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-# استخدام نموذج 1.5 الفلاش المستقر في الخطة المجانية
-GEMINI_MODEL = "gemini-1.5-flash" 
+# استخدام نموذج 3.6 الفلاش المستقر في الخطة المجانية
+GEMINI_MODEL = "gemini-3.6-flash" 
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 REQUEST_TIMEOUT_S = 25
 
