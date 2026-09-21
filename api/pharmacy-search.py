@@ -77,14 +77,21 @@ def fetch_pharmacies(lat, lon, area):
             "engine": "google_maps",
             "type": "search",
             "q": "صيدلية",
-            "ll": f"@{lat},{lon},15z",
-            # Forces results closer to the given coordinates. SerpAPI's own
-            # docs note that ll alone does not guarantee proximity — nearby
-            # is what actually enforces it for a bare, location-less query
-            # like ours ("صيدلية" with no city/district named in q).
-            "nearby": "true",
+            # Tighter zoom (16 vs the previous 15) biases Google's own
+            # ranking toward the immediate surroundings of the point.
+            "ll": f"@{lat},{lon},16z",
             "hl": "ar",
             "api_key": SERPAPI_KEY,
+            # NOTE: a previous revision added "nearby": "true" here. That
+            # change lines up exactly with results starting from 11km instead
+            # of the 400-700m pharmacies that used to show up — "nearby"
+            # mode appears to change Google's own ranking/result-set logic in
+            # a way that can drop the closest matches rather than guarantee
+            # them. Removed it: the code below already computes the real
+            # distance to every result with geopy-equivalent Haversine math
+            # and both filters (<=60km) and sorts (ascending) independently,
+            # so correctness no longer depends on this undocumented,
+            # SerpAPI-side ranking behavior at all.
         }
     else:
         return {"status": "error", "message": "الرجاء تحديد موقعك أو إدخال اسم المنطقة."}, 400
