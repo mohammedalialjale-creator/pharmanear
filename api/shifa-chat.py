@@ -1,10 +1,5 @@
 """
 Shifa AI (شفاء AI) — PharmaNear's smart pharmacist assistant.
-
-Serverless Python function deployed on Vercel at:
-    POST /api/shifa-chat
-
-Reads the API key from the DEEPSEEK_API_KEY environment variable.
 """
 
 import json
@@ -13,8 +8,10 @@ import urllib.error
 import urllib.request
 from http.server import BaseHTTPRequestHandler
 
-DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
-DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# استخدام نموذج 1.5 الفلاش المستقر في الخطة المجانية
+GEMINI_MODEL = "gemini-1.5-flash" 
+GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 REQUEST_TIMEOUT_S = 25
 
 SYSTEM_PROMPT = """أنتِ "شفاء AI" — المساعد الصيدلي الذكي التابع لمنصة PharmaNear (فارمانير).
@@ -28,48 +25,38 @@ SYSTEM_PROMPT = """أنتِ "شفاء AI" — المساعد الصيدلي ال
 - إذا كان السؤال خارج نطاق الأدوية والصحة الصيدلانية تماماً، وضّحي بلطف أن تخصصك هو الاستشارات الدوائية فقط.
 
 حدود مهمة يجب الالتزام بها دائماً:
-- لا تُشخّصي حالة مرضية لأي شخص، ولا تصفي جرعة دقيقة مخصصة لحالة فردية معينة (عمر، وزن، حالة مرضية مصاحبة) — قدّمي معلومات عامة موثوقة فقط وأحيلي التفاصيل الفردية للصيدلي أو الطبيب.
-- إذا ذكر الزائر أعراضاً قد تدل على حالة طارئة (صعوبة تنفس حادة، ألم صدر، فقدان وعي، جرعة زائدة)، وجّهيه فوراً وبوضوح لطلب الطوارئ أو التوجه لأقرب مستشفى، قبل أي شيء آخر.
+- لا تُشخّصي حالة مرضية لأي شخص، ولا تصفي جرعة دقيقة مخصصة لحالة فردية معينة — قدّمي معلومات عامة موثوقة فقط وأحيلي التفاصيل الفردية للصيدلي أو الطبيب.
+- إذا ذكر الزائر أعراضاً قد تدل على حالة طارئة، وجّهيه فوراً وبوضوح لطلب الطوارئ أو التوجه لأقرب مستشفى.
 - لا تخترعي أسماء أدوية أو جرعات لست متأكدة منها.
 
-قاعدة دقة صارمة (لتفادي الخلط بين الأدوية):
-- في أول جملة من إجابتك، اذكري بوضوح اسم الدواء الذي سُئلتِ عنه بالضبط كما ورد في السؤال (مثال: "بخصوص الإيبوبروفين..." وليس اسم دواء آخر مشابه أو من نفس الفئة).
-- الإيبوبروفين والباراسيتامول دواءان مختلفان تماماً (الإيبوبروفين مضاد التهاب غير ستيرويدي NSAID، والباراسيتامول مسكّن وخافض حرارة من فئة مختلفة تماماً) — لا تخلطي بينهما ولا بين أي دواءين آخرين مختلفين، حتى لو كانا يُستخدمان لنفس الغرض (تسكين الألم مثلاً).
-- إذا لم تكوني متأكدة تماماً من اسم الدواء أو تعرّفتِ على تهجئة غير مألوفة، اسألي الزائر للتأكيد بدل التخمين وتقديم معلومات عن دواء مختلف.
-
-أسلوبك: دافئ، مهني، مطمئن، ومختصر — لست بديلاً عن الصيدلي، أنتِ مساعدة أولية توجّه الزائر بشكل صحيح."""
+أسلوبك: دافئ، مهني، مطمئن، ومختصر."""
 
 SAFETY_DISCLAIMER = (
     "\n\n⚠️ هذه المعلومات لإرشادك ولا تُغني عن استشارة الطبيب أو الصيدلي مباشرة."
 )
 
 
-def call_deepseek(user_message, history):
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-
+def call_gemini(user_message, history):
+    contents = []
     for turn in history or []:
         role = turn.get("role")
         text = (turn.get("text") or "").strip()
-        if text:
-            # Map frontend roles to OpenAI/DeepSeek schema
-            mapped_role = "assistant" if role in ("model", "assistant") else "user"
-            messages.append({"role": mapped_role, "content": text})
-
-    messages.append({"role": "user", "content": user_message})
+        if role in ("user", "model") and text:
+            contents.append({"role": role, "parts": [{"text": text}]})
+    contents.append({"role": "user", "parts": [{"text": user_message}]})
 
     payload = {
-        "model": "deepseek-chat",
-        "messages": messages,
-        "temperature": 0.2,
-        "max_tokens": 700,
+        "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
+        "contents": contents,
+        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 700},
     }
 
     request = urllib.request.Request(
-        DEEPSEEK_URL,
+        GEMINI_URL,
         data=json.dumps(payload).encode("utf-8"),
         headers={
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "x-goog-api-key": GEMINI_API_KEY,
         },
         method="POST",
     )
@@ -77,11 +64,12 @@ def call_deepseek(user_message, history):
     with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_S) as response:
         data = json.loads(response.read().decode("utf-8"))
 
-    choices = data.get("choices") or []
-    if not choices:
+    candidates = data.get("candidates") or []
+    if not candidates:
         raise ValueError("لم يُرجع النموذج أي إجابة.")
 
-    text = choices[0].get("message", {}).get("content", "").strip()
+    parts = candidates[0].get("content", {}).get("parts", [])
+    text = "".join(p.get("text", "") for p in parts).strip()
     if not text:
         raise ValueError("رد فارغ من النموذج.")
 
@@ -101,10 +89,10 @@ class handler(BaseHTTPRequestHandler):
         message = (body.get("message") or "").strip()
         history = body.get("history") or []
 
-        if not DEEPSEEK_API_KEY:
+        if not GEMINI_API_KEY:
             self._send_json({
                 "status": "error",
-                "message": "مفتاح DEEPSEEK_API_KEY غير مضبوط على الخادم.",
+                "message": "مفتاح GEMINI_API_KEY غير مضبوط على الخادم.",
             }, 500)
             return
 
@@ -113,7 +101,7 @@ class handler(BaseHTTPRequestHandler):
             return
 
         try:
-            reply = call_deepseek(message, history)
+            reply = call_gemini(message, history)
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", "ignore")[:300]
             self._send_json({
@@ -124,7 +112,7 @@ class handler(BaseHTTPRequestHandler):
         except urllib.error.URLError:
             self._send_json({"status": "error", "message": "تعذّر الاتصال بخدمة الذكاء الاصطناعي."}, 502)
             return
-        except Exception as exc:  # last-resort safety net
+        except Exception as exc:
             self._send_json({"status": "error", "message": f"خطأ غير متوقع: {exc}"}, 500)
             return
 
