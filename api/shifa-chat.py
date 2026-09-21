@@ -1,29 +1,10 @@
 """
 Shifa AI (شفاء AI) — PharmaNear's smart pharmacist assistant.
 
-Same architecture as api/pharmacy-search.py, and for the same reason: a
-plain BaseHTTPRequestHandler-based function that Vercel auto-detects with
-zero configuration (no vercel.json, no Flask/WSGI, no requirements.txt —
-the Gemini call uses urllib.request from the standard library). This file
-is served automatically at:
-
+Serverless Python function deployed on Vercel at:
     POST /api/shifa-chat
 
-Reads the API key from the GEMINI_API_KEY environment variable only — it is
-never present in any file that reaches the frontend or the Git history.
-
-Request body (JSON):
-    {
-      "message": "ما هي جرعة الباراسيتامول للبالغين؟",
-      "history": [                      # optional, for multi-turn context
-        {"role": "user",  "text": "..."},
-        {"role": "model", "text": "..."}
-      ]
-    }
-
-Response body (JSON):
-    { "status": "success", "reply": "..." }
-    { "status": "error",   "message": "..." }
+Reads the API key from the DEEPSEEK_API_KEY environment variable.
 """
 
 import json
@@ -32,9 +13,8 @@ import urllib.error
 import urllib.request
 from http.server import BaseHTTPRequestHandler
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-GEMINI_MODEL = "gemini-3.6-flash"
-GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
+DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
 REQUEST_TIMEOUT_S = 25
 
 SYSTEM_PROMPT = """أنتِ "شفاء AI" — المساعد الصيدلي الذكي التابع لمنصة PharmaNear (فارمانير).
@@ -57,38 +37,39 @@ SYSTEM_PROMPT = """أنتِ "شفاء AI" — المساعد الصيدلي ال
 - الإيبوبروفين والباراسيتامول دواءان مختلفان تماماً (الإيبوبروفين مضاد التهاب غير ستيرويدي NSAID، والباراسيتامول مسكّن وخافض حرارة من فئة مختلفة تماماً) — لا تخلطي بينهما ولا بين أي دواءين آخرين مختلفين، حتى لو كانا يُستخدمان لنفس الغرض (تسكين الألم مثلاً).
 - إذا لم تكوني متأكدة تماماً من اسم الدواء أو تعرّفتِ على تهجئة غير مألوفة، اسألي الزائر للتأكيد بدل التخمين وتقديم معلومات عن دواء مختلف.
 
-أسلوبك: دافئ، مهني، مطمئن، ومختصر — لست بديلاً عن الصيدلي، أنتِ مساعدة أولية توجّه الزائر بشكل صحيح.
+أسلوبك: دافئ، مهني، مطمئن، ومختصر — لست بديلاً عن الصيدلي، أنتِ مساعدة أولية توجّه الزائر بشكل صحيح."""
 
-نصيحة في طول الإجابة: نظّمي إجابتك في أقسام قصيرة وواضحة (دواعي الاستعمال، الجرعة الشائعة، تنبيهات) بدل فقرة واحدة طويلة، واجعلي كل قسم بضع نقاط فقط — إجابة مركّزة ومكتملة أفضل من إجابة طويلة قد تنقطع قبل اكتمالها."""
-
-# Appended programmatically to every single reply — not left to the model's
-# discretion, so it is guaranteed present regardless of what Gemini returns.
 SAFETY_DISCLAIMER = (
     "\n\n⚠️ هذه المعلومات لإرشادك ولا تُغني عن استشارة الطبيب أو الصيدلي مباشرة."
 )
 
 
-def call_gemini(user_message, history):
-    contents = []
+def call_deepseek(user_message, history):
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+
     for turn in history or []:
         role = turn.get("role")
         text = (turn.get("text") or "").strip()
-        if role in ("user", "model") and text:
-            contents.append({"role": role, "parts": [{"text": text}]})
-    contents.append({"role": "user", "parts": [{"text": user_message}]})
+        if text:
+            # Map frontend roles to OpenAI/DeepSeek schema
+            mapped_role = "assistant" if role in ("model", "assistant") else "user"
+            messages.append({"role": mapped_role, "content": text})
+
+    messages.append({"role": "user", "content": user_message})
 
     payload = {
-        "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
-        "contents": contents,
-        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1536},
+        "model": "deepseek-chat",
+        "messages": messages,
+        "temperature": 0.2,
+        "max_tokens": 700,
     }
 
     request = urllib.request.Request(
-        GEMINI_URL,
+        DEEPSEEK_URL,
         data=json.dumps(payload).encode("utf-8"),
         headers={
             "Content-Type": "application/json",
-            "x-goog-api-key": GEMINI_API_KEY,
+            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
         },
         method="POST",
     )
@@ -96,24 +77,13 @@ def call_gemini(user_message, history):
     with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_S) as response:
         data = json.loads(response.read().decode("utf-8"))
 
-    candidates = data.get("candidates") or []
-    if not candidates:
+    choices = data.get("choices") or []
+    if not choices:
         raise ValueError("لم يُرجع النموذج أي إجابة.")
 
-    parts = candidates[0].get("content", {}).get("parts", [])
-    text = "".join(p.get("text", "") for p in parts).strip()
+    text = choices[0].get("message", {}).get("content", "").strip()
     if not text:
         raise ValueError("رد فارغ من النموذج.")
-
-    # If Gemini stopped because it hit maxOutputTokens, the text is cut off
-    # mid-sentence (sometimes mid-word). Rather than silently hand the user a
-    # broken sentence, say so plainly — a short honest note is far better
-    # than an answer that looks finished but abruptly isn't.
-    if candidates[0].get("finishReason") == "MAX_TOKENS":
-        note = (
-            "\n\n(انقطعت الإجابة لطولها — اسألني بصيغة أضيق، مثلاً عن نقطة واحدة محددة، وسأكمل بالتفصيل.)"
-        )
-        text = text.rstrip() + note
 
     return text + SAFETY_DISCLAIMER
 
@@ -131,10 +101,10 @@ class handler(BaseHTTPRequestHandler):
         message = (body.get("message") or "").strip()
         history = body.get("history") or []
 
-        if not GEMINI_API_KEY:
+        if not DEEPSEEK_API_KEY:
             self._send_json({
                 "status": "error",
-                "message": "مفتاح GEMINI_API_KEY غير مضبوط على الخادم.",
+                "message": "مفتاح DEEPSEEK_API_KEY غير مضبوط على الخادم.",
             }, 500)
             return
 
@@ -143,7 +113,7 @@ class handler(BaseHTTPRequestHandler):
             return
 
         try:
-            reply = call_gemini(message, history)
+            reply = call_deepseek(message, history)
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", "ignore")[:300]
             self._send_json({
@@ -154,7 +124,7 @@ class handler(BaseHTTPRequestHandler):
         except urllib.error.URLError:
             self._send_json({"status": "error", "message": "تعذّر الاتصال بخدمة الذكاء الاصطناعي."}, 502)
             return
-        except Exception as exc:  # last-resort safety net — never a non-JSON crash
+        except Exception as exc:  # last-resort safety net
             self._send_json({"status": "error", "message": f"خطأ غير متوقع: {exc}"}, 500)
             return
 
